@@ -1,0 +1,20 @@
+namespace LeagueManagementApi.Models;
+
+public class Match
+{
+    public int Id { get; set; }
+    public int LeagueId { get; set; }
+    public League League { get; set; } = null!;
+
+    public int PlayerAId { get; set; }
+    public Player PlayerA { get; set; } = null!;
+
+    public int PlayerBId { get; set; }
+    public Player PlayerB { get; set; } = null!;
+
+    public int Leg { get; set; } = 1;
+    public MatchStatus Status { get; set; } = MatchStatus.Pending;
+
+    public int? PlayerAScore { get; set; }
+    public int? PlayerBScore { get; set; }
+}
