@@ -135,6 +135,15 @@ export function LeagueFormPage() {
               readOnly={!canEditSettings}
             />
           </div>
+          {form.startDate && form.endDate && new Date(form.endDate) > new Date(form.startDate) && (
+            <p className="sm:col-span-2 text-sm text-[var(--color-gold)]">
+              {(() => {
+                const days = (new Date(form.endDate).getTime() - new Date(form.startDate).getTime()) / (24 * 60 * 60 * 1000);
+                const weeks = Math.max(1, Math.floor(days / 7));
+                return `League span: ${weeks} week${weeks === 1 ? '' : 's'} — when you generate fixtures, they will be spread evenly across these weeks (e.g. so many games per week).`;
+              })()}
+            </p>
+          )}
           <div>
             <label className="block text-sm text-gray-400 mb-1">Min players *</label>
             <input

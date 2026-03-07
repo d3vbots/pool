@@ -60,6 +60,16 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.EnsureCreatedAsync();
+    // Add WeekNumber column if missing (e.g. existing DB created before week-based fixtures)
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE Matches ADD COLUMN WeekNumber INTEGER NULL");
+    }
+    catch
+    {
+        // Column already exists (e.g. new DB) or other schema issue — ignore
+    }
     await SeedData.InitializeAsync(db);
 }
 

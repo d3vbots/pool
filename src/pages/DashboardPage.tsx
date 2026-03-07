@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { leagues } from '../api/client';
 import { HeroPool } from '../components/HeroPool';
+import { POOL_IMAGES } from '../lib/poolImages';
 import type { LeagueResponse } from '../api/client';
 
 export function DashboardPage() {
@@ -39,9 +40,9 @@ export function DashboardPage() {
   return (
     <div className="space-y-6 sm:space-y-8">
       <HeroPool
-        title="Imbizo Pool League"
+        title="Pool League"
         subtitle="Track leagues, fixtures & standings. Where the best shots win."
-        imageUrl="https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=1200&q=80"
+        imageUrl={POOL_IMAGES.hero}
       />
 
       {activeLeagues.length === 0 ? (

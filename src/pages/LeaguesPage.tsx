@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { leagues } from '../api/client';
 import { HeroPool } from '../components/HeroPool';
+import { POOL_IMAGES } from '../lib/poolImages';
 import type { LeagueResponse } from '../api/client';
 
 export function LeaguesPage() {
@@ -34,7 +35,7 @@ export function LeaguesPage() {
 
   return (
     <div className="space-y-6">
-      <HeroPool title="Leagues" subtitle="Create and manage your pool leagues." compact />
+      <HeroPool title="Leagues" subtitle="Create and manage your pool leagues." imageUrl={POOL_IMAGES.hero} compact />
       <div className="flex items-center justify-between gap-4">
         <h2 className="font-display text-2xl text-[var(--color-cream)] tracking-wide sr-only">All leagues</h2>
         <Link to="/leagues/new" className="btn-primary inline-flex items-center justify-center min-h-[44px] px-4 py-2.5 text-sm font-semibold">

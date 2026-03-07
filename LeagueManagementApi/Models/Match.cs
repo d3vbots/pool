@@ -13,6 +13,8 @@ public class Match
     public Player PlayerB { get; set; } = null!;
 
     public int Leg { get; set; } = 1;
+    /// <summary>1-based week within the league span; fixtures are spread evenly across weeks derived from league Start/End dates.</summary>
+    public int? WeekNumber { get; set; }
     public MatchStatus Status { get; set; } = MatchStatus.Pending;
 
     public int? PlayerAScore { get; set; }

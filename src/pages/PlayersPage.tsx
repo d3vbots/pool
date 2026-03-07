@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { players } from '../api/client';
 import type { PlayerResponse } from '../api/client';
 
@@ -76,21 +77,21 @@ export function PlayersPage() {
         <form onSubmit={handleCreate} className="card-felt p-6 max-w-md space-y-4">
           <h3 className="text-lg font-semibold text-[var(--color-cream)]">Add player</h3>
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Name *</label>
+            <label className="block text-sm text-[var(--color-cream-dim)] mb-1 font-medium">Name *</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2 text-white focus:border-[var(--color-accent-green)] focus:outline-none"
+              className="w-full min-h-[44px] rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/80 px-3 py-2.5 text-[var(--color-cream)] placeholder-[var(--color-muted)] focus:border-[var(--color-gold)] focus:ring-1 focus:ring-[var(--color-gold)]/30 focus:outline-none"
               required
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Phone</label>
+            <label className="block text-sm text-[var(--color-cream-dim)] mb-1 font-medium">Phone</label>
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2 text-white focus:border-[var(--color-accent-green)] focus:outline-none"
+              className="w-full min-h-[44px] rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/80 px-3 py-2.5 text-[var(--color-cream)] placeholder-[var(--color-muted)] focus:border-[var(--color-gold)] focus:ring-1 focus:ring-[var(--color-gold)]/30 focus:outline-none"
             />
           </div>
           <button type="submit" disabled={saving} className="btn-primary min-h-[44px] px-4 py-2.5 disabled:opacity-50">
@@ -111,7 +112,14 @@ export function PlayersPage() {
           <tbody className="divide-y divide-[var(--color-border)]">
             {list.map((p) => (
               <tr key={p.id} className="hover:bg-white/5">
-                <td className="px-4 py-3 text-[var(--color-cream)] font-medium">{p.name}</td>
+                <td className="px-4 py-3">
+                  <Link
+                    to={`/player/${p.id}`}
+                    className="text-[var(--color-cream)] font-medium hover:text-[var(--color-gold)] transition underline underline-offset-2"
+                  >
+                    {p.name}
+                  </Link>
+                </td>
                 <td className="px-4 py-3 text-[var(--color-cream-dim)]">{p.phoneNumber}</td>
                 <td className="px-4 py-3">
                   <button

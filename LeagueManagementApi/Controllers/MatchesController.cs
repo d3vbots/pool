@@ -7,7 +7,6 @@ namespace LeagueManagementApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class MatchesController : ControllerBase
 {
     private readonly IMatchService _matchService;
@@ -15,6 +14,7 @@ public class MatchesController : ControllerBase
     public MatchesController(IMatchService matchService) => _matchService = matchService;
 
     [HttpGet("leagues/{leagueId:int}")]
+    [AllowAnonymous]
     public async Task<ActionResult<IReadOnlyList<MatchResponse>>> GetLeagueMatches(int leagueId, CancellationToken ct)
     {
         var list = await _matchService.GetByLeagueAsync(leagueId, ct);
@@ -22,6 +22,7 @@ public class MatchesController : ControllerBase
     }
 
     [HttpPut("{id:int}/result")]
+    [Authorize]
     public async Task<ActionResult> SetResult(int id, [FromBody] SetMatchResultRequest req, CancellationToken ct)
     {
         var (ok, error) = await _matchService.SetResultAsync(id, req, ct);
@@ -30,6 +31,7 @@ public class MatchesController : ControllerBase
     }
 
     [HttpDelete("{id:int}/result")]
+    [Authorize]
     public async Task<ActionResult> DeleteResult(int id, CancellationToken ct)
     {
         var (ok, error) = await _matchService.DeleteResultAsync(id, ct);

@@ -59,6 +59,10 @@ export const leagues = {
 
 export const players = {
   list: () => api<PlayerResponse[]>('/players'),
+  get: (id: number) => api<PlayerResponse>(`/players/${id}`),
+  getLeagues: (id: number) => api<PlayerLeagueEntryResponse[]>(`/players/${id}/leagues`),
+  getMatches: (id: number, leagueId?: number) =>
+    api<MatchResponse[]>(`/players/${id}/matches${leagueId != null ? `?leagueId=${leagueId}` : ''}`),
   create: (body: CreatePlayerRequest) => api<PlayerResponse>('/players', { method: 'POST', body: JSON.stringify(body) }),
   remove: (playerId: number) => api<void>(`/players/${playerId}`, { method: 'DELETE' }),
   listByLeague: (leagueId: number) => api<LeaguePlayerResponse[]>(`/players/leagues/${leagueId}`),
@@ -135,6 +139,21 @@ export interface CreatePlayerRequest {
   profileImageUrl?: string;
 }
 
+export interface PlayerLeagueEntryResponse {
+  leagueId: number;
+  leagueName: string;
+  leagueStatus: string;
+  paymentStatus: string;
+  played: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  gamesWon: number;
+  gamesLost: number;
+  goalDifference: number;
+  points: number;
+}
+
 export interface LeaguePlayerResponse {
   leagueId: number;
   playerId: number;
@@ -153,11 +172,14 @@ export interface LeaguePlayerResponse {
 export interface MatchResponse {
   id: number;
   leagueId: number;
+  leagueName?: string | null;
   playerAId: number;
   playerAName: string;
   playerBId: number;
   playerBName: string;
   leg: number;
+  /** 1-based week in league span; fixtures are spread across weeks. */
+  weekNumber?: number | null;
   status: string;
   playerAScore?: number;
   playerBScore?: number;

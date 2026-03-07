@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using LeagueManagementApi.Data;
 using LeagueManagementApi.DTOs;
 using LeagueManagementApi.Models;
+using LeagueManagementApi.Services;
 
 namespace LeagueManagementApi.Controllers;
 
@@ -13,8 +14,13 @@ namespace LeagueManagementApi.Controllers;
 public class PlayersController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly IMatchService _matchService;
 
-    public PlayersController(AppDbContext db) => _db = db;
+    public PlayersController(AppDbContext db, IMatchService matchService)
+    {
+        _db = db;
+        _matchService = matchService;
+    }
 
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<PlayerResponse>>> GetPlayers(CancellationToken ct)
@@ -32,6 +38,61 @@ public class PlayersController : ControllerBase
                 IsActive = p.IsActive
             })
             .ToListAsync(ct);
+        return Ok(list);
+    }
+
+    [HttpGet("{id:int}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<PlayerResponse>> GetPlayer(int id, CancellationToken ct)
+    {
+        var player = await _db.Players
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id, ct);
+        if (player == null || !player.IsActive)
+            return NotFound("Player not found.");
+        return Ok(new PlayerResponse
+        {
+            Id = player.Id,
+            Name = player.Name,
+            PhoneNumber = player.PhoneNumber,
+            ProfileImageUrl = player.ProfileImageUrl,
+            IsActive = player.IsActive
+        });
+    }
+
+    [HttpGet("{id:int}/leagues")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<PlayerLeagueEntryResponse>>> GetPlayerLeagues(int id, CancellationToken ct)
+    {
+        var list = await _db.LeaguePlayers
+            .AsNoTracking()
+            .Where(lp => lp.PlayerId == id)
+            .Include(lp => lp.League)
+            .OrderByDescending(lp => lp.League!.StartDate)
+            .Select(lp => new PlayerLeagueEntryResponse
+            {
+                LeagueId = lp.LeagueId,
+                LeagueName = lp.League!.Name,
+                LeagueStatus = lp.League.Status.ToString(),
+                PaymentStatus = lp.PaymentStatus.ToString(),
+                Played = lp.Played,
+                Wins = lp.Wins,
+                Draws = lp.Draws,
+                Losses = lp.Losses,
+                GamesWon = lp.GamesWon,
+                GamesLost = lp.GamesLost,
+                GoalDifference = lp.GamesWon - lp.GamesLost,
+                Points = lp.Points
+            })
+            .ToListAsync(ct);
+        return Ok(list);
+    }
+
+    [HttpGet("{id:int}/matches")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<MatchResponse>>> GetPlayerMatches(int id, [FromQuery] int? leagueId, CancellationToken ct)
+    {
+        var list = await _matchService.GetByPlayerAsync(id, leagueId, ct);
         return Ok(list);
     }
 

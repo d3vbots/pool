@@ -8,6 +8,7 @@ namespace LeagueManagementApi.Services;
 public interface IMatchService
 {
     Task<IReadOnlyList<MatchResponse>> GetByLeagueAsync(int leagueId, CancellationToken ct = default);
+    Task<IReadOnlyList<MatchResponse>> GetByPlayerAsync(int playerId, int? leagueId, CancellationToken ct = default);
     Task<(bool Ok, string Error)> SetResultAsync(int matchId, SetMatchResultRequest req, CancellationToken ct = default);
     Task<(bool Ok, string Error)> DeleteResultAsync(int matchId, CancellationToken ct = default);
 }
@@ -30,7 +31,27 @@ public class MatchService : IMatchService
             .Where(m => m.LeagueId == leagueId)
             .Include(m => m.PlayerA)
             .Include(m => m.PlayerB)
-            .OrderBy(m => m.Leg)
+            .OrderBy(m => m.WeekNumber ?? int.MaxValue)
+            .ThenBy(m => m.Leg)
+            .ThenBy(m => m.Id)
+            .ToListAsync(ct);
+        return matches.Select(Map).ToList();
+    }
+
+    public async Task<IReadOnlyList<MatchResponse>> GetByPlayerAsync(int playerId, int? leagueId, CancellationToken ct = default)
+    {
+        var query = _db.Matches
+            .AsNoTracking()
+            .Where(m => m.PlayerAId == playerId || m.PlayerBId == playerId);
+        if (leagueId.HasValue)
+            query = query.Where(m => m.LeagueId == leagueId.Value);
+        var matches = await query
+            .Include(m => m.PlayerA)
+            .Include(m => m.PlayerB)
+            .Include(m => m.League)
+            .OrderBy(m => m.LeagueId)
+            .ThenBy(m => m.WeekNumber ?? int.MaxValue)
+            .ThenBy(m => m.Leg)
             .ThenBy(m => m.Id)
             .ToListAsync(ct);
         return matches.Select(Map).ToList();
@@ -150,11 +171,13 @@ public class MatchService : IMatchService
     {
         Id = m.Id,
         LeagueId = m.LeagueId,
+        LeagueName = m.League?.Name,
         PlayerAId = m.PlayerAId,
         PlayerAName = m.PlayerA?.Name ?? "",
         PlayerBId = m.PlayerBId,
         PlayerBName = m.PlayerB?.Name ?? "",
         Leg = m.Leg,
+        WeekNumber = m.WeekNumber,
         Status = m.Status.ToString(),
         PlayerAScore = m.PlayerAScore,
         PlayerBScore = m.PlayerBScore

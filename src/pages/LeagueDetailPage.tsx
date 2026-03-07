@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, Outlet, useNavigate, useParams } from 'react-router-dom';
+import { Link, Outlet, useParams } from 'react-router-dom';
 import { leagues } from '../api/client';
 import type { LeagueResponse } from '../api/client';
 
 export function LeagueDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [league, setLeague] = useState<LeagueResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -108,7 +107,7 @@ export function LeagueDetailPage() {
         <p className="text-[var(--color-cream-dim)] text-sm sm:text-base">{league.description}</p>
       )}
       <div className="flex gap-2 border-b border-[var(--color-border)] pb-2 overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <Link to={base} end className="min-h-[44px] shrink-0 flex items-center px-3 py-2.5 rounded-lg text-[var(--color-cream-dim)] hover:bg-white/5 hover:text-[var(--color-gold)] transition whitespace-nowrap">
+        <Link to={base} className="min-h-[44px] shrink-0 flex items-center px-3 py-2.5 rounded-lg text-[var(--color-cream-dim)] hover:bg-white/5 hover:text-[var(--color-gold)] transition whitespace-nowrap">
           Overview
         </Link>
         <Link to={`${base}/players`} className="min-h-[44px] shrink-0 flex items-center px-3 py-2.5 rounded-lg text-[var(--color-cream-dim)] hover:bg-white/5 hover:text-[var(--color-gold)] transition whitespace-nowrap">Players ({league.playerCount})</Link>

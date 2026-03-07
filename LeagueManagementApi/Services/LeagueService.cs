@@ -128,16 +128,24 @@ public class LeagueService : ILeagueService
         var playerIds = league.LeaguePlayers.Select(lp => lp.PlayerId).ToList();
         var fixtures = _roundRobin.GenerateFixtures(playerIds, league.IsDoubleRoundRobin);
 
+        // Spread fixtures across weeks based on league span (StartDate -> EndDate)
+        var totalDays = (league.EndDate - league.StartDate).Days;
+        var weekCount = totalDays >= 7 ? Math.Max(1, totalDays / 7) : 1;
+
+        var index = 0;
         foreach (var (playerAId, playerBId, leg) in fixtures)
         {
+            var weekNumber = (index % weekCount) + 1;
             _db.Matches.Add(new Match
             {
                 LeagueId = leagueId,
                 PlayerAId = playerAId,
                 PlayerBId = playerBId,
                 Leg = leg,
+                WeekNumber = weekNumber,
                 Status = MatchStatus.Pending
             });
+            index++;
         }
         league.FixturesGenerated = true;
         await _db.SaveChangesAsync(ct);

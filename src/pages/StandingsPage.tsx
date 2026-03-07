@@ -1,8 +1,100 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { leagues, leaderboard } from '../api/client';
+import { leagues, leaderboard, matches } from '../api/client';
 import { HeroPool } from '../components/HeroPool';
-import type { LeagueResponse, LeaderboardEntryResponse } from '../api/client';
+import { POOL_IMAGES } from '../lib/poolImages';
+import { downloadFixturesPdf } from '../lib/downloadFixturesPdf';
+import type { LeagueResponse, LeaderboardEntryResponse, MatchResponse } from '../api/client';
+
+/** Format week date range from league start (e.g. "Jan 1 – Jan 7"). */
+function getWeekDateRange(startDateIso: string, weekNumber: number, endDateIso?: string): string {
+  const start = new Date(startDateIso);
+  const weekStart = new Date(start);
+  weekStart.setDate(weekStart.getDate() + (weekNumber - 1) * 7);
+  let weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  if (endDateIso) {
+    const end = new Date(endDateIso);
+    if (weekEnd > end) weekEnd = end;
+  }
+  const fmt = (d: Date) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return `${fmt(weekStart)} – ${fmt(weekEnd)}`;
+}
+
+/** Read-only fixtures and results for public view; groups by week when weekNumber is set. */
+function FixturesAndResultsPublic({ matches: matchList, league }: { matches: MatchResponse[]; league?: LeagueResponse | null }) {
+  const useWeeks = matchList.some((m) => m.weekNumber != null);
+  const groups: { key: string; label: string; list: MatchResponse[] }[] = useWeeks
+    ? (() => {
+        const byWeek = matchList.reduce<Record<number, MatchResponse[]>>((acc, m) => {
+          const w = m.weekNumber ?? 0;
+          (acc[w] = acc[w] ?? []).push(m);
+          return acc;
+        }, {});
+        return Object.entries(byWeek)
+          .sort(([a], [b]) => Number(a) - Number(b))
+          .map(([week, list]) => ({
+            key: `week-${week}`,
+            label: league?.startDate
+              ? `Week ${week} (${getWeekDateRange(league.startDate, Number(week), league.endDate)})`
+              : `Week ${week}`,
+            list,
+          }));
+      })()
+    : (() => {
+        const byLeg = matchList.reduce<Record<number, MatchResponse[]>>((acc, m) => {
+          (acc[m.leg] = acc[m.leg] ?? []).push(m);
+          return acc;
+        }, {});
+        return Object.entries(byLeg)
+          .sort(([a], [b]) => Number(a) - Number(b))
+          .map(([leg, list]) => ({ key: `leg-${leg}`, label: `Leg ${leg}`, list }));
+      })();
+
+  return (
+    <div className="space-y-6">
+      {groups.map(({ key, label, list }) => (
+        <div key={key}>
+          <h3 className="text-sm text-[var(--color-gold)] font-medium mb-2">{label}</h3>
+          <div className="card-felt overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left min-w-[320px]">
+                <thead className="bg-[var(--color-surface-elevated)] text-[var(--color-muted)] text-sm">
+                  <tr>
+                    <th className="px-4 py-3">Match</th>
+                    <th className="px-4 py-3 text-center">Score</th>
+                    <th className="px-4 py-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--color-border)]">
+                  {list.map((m) => (
+                    <tr key={m.id} className="hover:bg-white/5">
+                      <td className="px-4 py-3 text-[var(--color-cream)]">
+                        <Link to={`/player/${m.playerAId}`} className="hover:text-[var(--color-gold)] transition underline underline-offset-2">{m.playerAName}</Link>
+                        {' vs '}
+                        <Link to={`/player/${m.playerBId}`} className="hover:text-[var(--color-gold)] transition underline underline-offset-2">{m.playerBName}</Link>
+                      </td>
+                      <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">
+                        {m.status === 'Completed' && m.playerAScore != null && m.playerBScore != null
+                          ? `${m.playerAScore} – ${m.playerBScore}`
+                          : '–'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={m.status === 'Completed' ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-muted)]'}>
+                          {m.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /** Public standings: list leagues and view a league's leaderboard (no login). */
 export function StandingsPage() {
@@ -45,7 +137,7 @@ function StandingsLeagueList() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <HeroPool title="Standings" subtitle="Pick a league and see who’s on top." compact />
+      <HeroPool title="Standings" subtitle="Pick a league and see who’s on top." imageUrl={POOL_IMAGES.hero} compact />
       <p className="text-[var(--color-cream-dim)] text-sm sm:text-base">Select a league to view the leaderboard.</p>
       <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {list.map((league) => (
@@ -69,14 +161,16 @@ function StandingsLeagueList() {
 function LeagueStandingsView({ leagueId }: { leagueId: number }) {
   const [league, setLeague] = useState<LeagueResponse | null>(null);
   const [entries, setEntries] = useState<LeaderboardEntryResponse[]>([]);
+  const [matchList, setMatchList] = useState<MatchResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    Promise.all([leagues.get(leagueId), leaderboard.get(leagueId)])
-      .then(([l, e]) => {
+    Promise.all([leagues.get(leagueId), leaderboard.get(leagueId), matches.listByLeague(leagueId)])
+      .then(([l, e, m]) => {
         setLeague(l);
         setEntries(e);
+        setMatchList(m);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -111,10 +205,12 @@ function LeagueStandingsView({ leagueId }: { leagueId: number }) {
             key={entry.playerId}
             className={`card-felt p-4 ${i === 0 ? 'ring-1 ring-[var(--color-gold)]/40' : ''}`}
           >
-            <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 <span className="text-lg font-bold text-[var(--color-gold)] shrink-0 w-7">{entry.rank}</span>
-                <span className="font-medium text-[var(--color-cream)] truncate">{entry.playerName}</span>
+                <Link to={`/player/${entry.playerId}`} className="font-medium text-[var(--color-cream)] truncate hover:text-[var(--color-gold)] transition underline underline-offset-2">
+                  {entry.playerName}
+                </Link>
               </div>
               <span className="text-xl font-bold text-[var(--color-accent-green)] shrink-0">{entry.points} pts</span>
             </div>
@@ -150,7 +246,11 @@ function LeagueStandingsView({ leagueId }: { leagueId: number }) {
               {entries.map((entry, i) => (
                 <tr key={entry.playerId} className={`hover:bg-white/5 ${i === 0 ? 'bg-[var(--color-felt)]/30' : ''}`}>
                   <td className="px-4 py-3 font-semibold text-[var(--color-gold)]">{entry.rank}</td>
-                  <td className="px-4 py-3 font-medium text-[var(--color-cream)]">{entry.playerName}</td>
+                  <td className="px-4 py-3">
+                    <Link to={`/player/${entry.playerId}`} className="font-medium text-[var(--color-cream)] hover:text-[var(--color-gold)] transition underline underline-offset-2">
+                      {entry.playerName}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">{entry.played}</td>
                   <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">{entry.wins}</td>
                   <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">{entry.draws}</td>
@@ -169,6 +269,28 @@ function LeagueStandingsView({ leagueId }: { leagueId: number }) {
       </div>
       {entries.length === 0 && (
         <p className="text-center text-[var(--color-muted)]">No standings yet.</p>
+      )}
+
+      {/* Fixtures & Results (read-only for public) */}
+      {matchList.length > 0 && (
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-4">
+            <h2 className="font-display text-xl sm:text-2xl text-[var(--color-cream)] tracking-wide">Fixtures & results</h2>
+            <button
+              type="button"
+              onClick={() => downloadFixturesPdf({
+                leagueName: league?.name ?? 'League',
+                matches: matchList,
+                startDate: league?.startDate,
+                endDate: league?.endDate,
+              })}
+              className="btn-primary min-h-[44px] px-4 py-2.5 text-sm font-medium"
+            >
+              Download PDF
+            </button>
+          </div>
+          <FixturesAndResultsPublic matches={matchList} league={league} />
+        </>
       )}
     </div>
   );

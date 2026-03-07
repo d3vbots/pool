@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuthStore, selectIsAuthenticated } from '../store/authStore';
-
-const POOL_BG = 'https://images.unsplash.com/photo-1611892440504-42a79284824c?w=1200&q=80';
+import { LOGO_PATH, POOL_IMAGES } from '../lib/poolImages';
 
 export function LoginPage() {
   const [username, setUsername] = useState('admin');
@@ -33,14 +32,14 @@ export function LoginPage() {
     <div className="min-h-[85vh] flex items-center justify-center px-3 py-8 relative">
       <div
         className="absolute inset-0 bg-cover bg-center opacity-25"
-        style={{ backgroundImage: `url(${POOL_BG})` }}
+        style={{ backgroundImage: `url(${POOL_IMAGES.hero})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-surface)] via-[var(--color-surface)]/95 to-[var(--color-surface)]" />
       <div className="relative w-full max-w-sm">
         <div className="card-felt p-6 sm:p-8 shadow-2xl">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <img src="/logo.png" alt="" className="h-12 w-12 object-contain" />
-            <span className="font-display text-2xl text-[var(--color-cream)] tracking-wide">Imbizo Pool League</span>
+            <img src={LOGO_PATH} alt="" className="h-12 w-auto max-w-[140px] object-contain" />
+            <span className="font-display text-2xl text-[var(--color-cream)] tracking-wide">Pool League</span>
           </div>
           <h1 className="text-center font-display text-2xl sm:text-3xl text-[var(--color-gold)] mb-2 tracking-wide">
             Admin Login

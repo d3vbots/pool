@@ -12,6 +12,7 @@ import { LeagueFixturesPage } from './pages/LeagueFixturesPage';
 import { LeagueResultsPage } from './pages/LeagueResultsPage';
 import { LeagueLeaderboardPage } from './pages/LeagueLeaderboardPage';
 import { PlayersPage } from './pages/PlayersPage';
+import { PlayerDetailPage } from './pages/PlayerDetailPage';
 import { StandingsPage } from './pages/StandingsPage';
 import type { LeagueResponse } from './api/client';
 
@@ -30,6 +31,7 @@ function App() {
           <Route path="login" element={<LoginPage />} />
           <Route path="standings" element={<StandingsPage />} />
           <Route path="standings/:leagueId" element={<StandingsPage />} />
+          <Route path="player/:id" element={<PlayerDetailPage />} />
           <Route
             path="/"
             element={

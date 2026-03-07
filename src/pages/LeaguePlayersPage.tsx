@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useOutletContext, useParams } from 'react-router-dom';
+import { Link, useOutletContext, useParams } from 'react-router-dom';
 import { players, leagues } from '../api/client';
 import type { LeagueResponse } from '../api/client';
 import type { PlayerResponse, LeaguePlayerResponse } from '../api/client';
@@ -105,7 +105,11 @@ export function LeaguePlayersPage() {
             {leaguePlayers.map((lp, i) => (
               <tr key={lp.playerId} className="hover:bg-white/5">
                 <td className="px-4 py-3 text-[var(--color-gold)]">{i + 1}</td>
-                <td className="px-4 py-3 text-[var(--color-cream)]">{lp.playerName}</td>
+                <td className="px-4 py-3">
+                  <Link to={`/player/${lp.playerId}`} className="text-[var(--color-cream)] hover:text-[var(--color-gold)] transition underline underline-offset-2">
+                    {lp.playerName}
+                  </Link>
+                </td>
                 <td className="px-4 py-3">
                   <button
                     type="button"

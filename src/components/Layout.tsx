@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore, selectIsAuthenticated } from '../store/authStore';
+import { LOGO_PATH } from '../lib/poolImages';
 
 export function Layout() {
   const isAuth = useAuthStore(selectIsAuthenticated);
@@ -28,9 +29,9 @@ export function Layout() {
             className="shrink-0 min-h-[44px] flex items-center gap-3 group"
             onClick={closeMenu}
           >
-            <img src="/logo.png" alt="" className="h-9 w-9 object-contain" />
+            <img src={LOGO_PATH} alt="" className="h-9 w-auto max-w-[120px] object-contain" />
             <span className="font-display text-xl sm:text-2xl tracking-wide text-[var(--color-cream)] group-hover:text-[var(--color-gold)] transition">
-              Imbizo Pool League
+              Pool League
             </span>
           </Link>
           <nav className="hidden md:flex items-center gap-1">
