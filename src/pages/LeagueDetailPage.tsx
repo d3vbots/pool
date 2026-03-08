@@ -10,6 +10,7 @@ export function LeagueDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [togglingHidden, setTogglingHidden] = useState(false);
 
@@ -36,6 +37,22 @@ export function LeagueDetailPage() {
       setError(e instanceof Error ? e.message : 'Failed to generate fixtures');
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleRegenerateFixtures = async () => {
+    if (!league) return;
+    if (!confirm('Regenerate fixtures? All existing fixtures and results will be removed and replaced with a new schedule.')) return;
+    setRegenerating(true);
+    setError('');
+    try {
+      await leagues.regenerateFixtures(leagueId);
+      const updated = await leagues.get(leagueId);
+      setLeague(updated);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to regenerate fixtures');
+    } finally {
+      setRegenerating(false);
     }
   };
 
@@ -96,6 +113,7 @@ export function LeagueDetailPage() {
   if (!league) return null;
 
   const canGenerate = league.status === 'RegistrationOpen' && !league.fixturesGenerated && league.playerCount >= league.minPlayers;
+  const canRegenerate = league.fixturesGenerated && (league.status === 'RegistrationOpen' || league.status === 'Active') && league.playerCount >= league.minPlayers;
   const canOpenRegistration = league.status === 'Draft' && !league.fixturesGenerated;
   const needsMorePlayers = league.status === 'RegistrationOpen' && !league.fixturesGenerated && league.playerCount < league.minPlayers;
 
@@ -122,6 +140,16 @@ export function LeagueDetailPage() {
             className="btn-primary min-h-[44px] px-4 py-2.5 text-base w-full sm:w-auto disabled:opacity-50"
           >
             {generating ? 'Generating…' : 'Generate Fixtures'}
+          </button>
+        )}
+        {canRegenerate && (
+          <button
+            type="button"
+            onClick={handleRegenerateFixtures}
+            disabled={regenerating}
+            className="min-h-[44px] px-4 py-2.5 text-base w-full sm:w-auto rounded-lg border border-[var(--color-gold)]/60 text-[var(--color-gold)] hover:bg-[var(--color-gold)]/10 disabled:opacity-50 transition"
+          >
+            {regenerating ? 'Regenerating…' : 'Regenerate Fixtures'}
           </button>
         )}
       </div>

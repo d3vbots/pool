@@ -13,6 +13,7 @@ public interface ILeagueService
     Task<LeagueResponse?> UpdateAsync(int id, UpdateLeagueRequest req, CancellationToken ct = default);
     Task<bool> SetStatusAsync(int id, LeagueStatus status, CancellationToken ct = default);
     Task<(bool Ok, string Error)> GenerateFixturesAsync(int leagueId, CancellationToken ct = default);
+    Task<(bool Ok, string Error)> RegenerateFixturesAsync(int leagueId, CancellationToken ct = default);
     Task<bool> SoftDeleteAsync(int id, CancellationToken ct = default);
     Task<bool> SetHiddenAsync(int id, bool isHidden, CancellationToken ct = default);
     Task<bool> RestoreAsync(int id, CancellationToken ct = default);
@@ -168,13 +169,46 @@ public class LeagueService : ILeagueService
         if (league.LeaguePlayers.Count < league.MinPlayers)
             return (false, $"Need at least {league.MinPlayers} players. Current: {league.LeaguePlayers.Count}.");
 
+        await DoGenerateFixturesAsync(league, leagueId, ct);
+        return (true, string.Empty);
+    }
+
+    public async Task<(bool Ok, string Error)> RegenerateFixturesAsync(int leagueId, CancellationToken ct = default)
+    {
+        var league = await _db.Leagues
+            .Include(l => l.LeaguePlayers)
+            .Include(l => l.Matches)
+            .FirstOrDefaultAsync(l => l.Id == leagueId && !l.IsDeleted, ct);
+        if (league == null)
+            return (false, "League not found.");
+        if (!league.FixturesGenerated || !league.Matches.Any())
+            return (false, "No fixtures to regenerate. Generate fixtures first.");
+        if (league.Status != LeagueStatus.RegistrationOpen && league.Status != LeagueStatus.Active)
+            return (false, "Can only regenerate fixtures when league is RegistrationOpen or Active.");
+        if (league.LeaguePlayers.Count < league.MinPlayers)
+            return (false, $"Need at least {league.MinPlayers} players. Current: {league.LeaguePlayers.Count}.");
+
+        _db.Matches.RemoveRange(league.Matches);
+        league.FixturesGenerated = false;
+        await _db.SaveChangesAsync(ct);
+
+        await DoGenerateFixturesAsync(league, leagueId, ct);
+        return (true, string.Empty);
+    }
+
+    /// <summary>
+    /// Generates fixtures for a league that has LeaguePlayers loaded and no existing matches. Sets FixturesGenerated = true and saves.
+    /// </summary>
+    private async Task DoGenerateFixturesAsync(League league, int leagueId, CancellationToken ct)
+    {
         var playerIds = league.LeaguePlayers.Select(lp => lp.PlayerId).ToList();
         var fixtures = _roundRobin.GenerateFixtures(playerIds, league.IsDoubleRoundRobin);
 
         var totalDays = (league.EndDate - league.StartDate).Days;
-        var weekCount = totalDays >= 7 ? Math.Max(1, totalDays / 7) : 1;
+        var weekCount = totalDays >= 7
+            ? Math.Max(1, (int)Math.Ceiling((double)totalDays / 7))
+            : 1;
 
-        // Assign each fixture to a week so that within each week, each player has ~50% home (PlayerA) and away (PlayerB)
         var assignments = AssignFixturesToWeeksBalanced(fixtures, weekCount);
 
         foreach (var (playerAId, playerBId, leg, weekNumber) in assignments)
@@ -191,11 +225,11 @@ public class LeagueService : ILeagueService
         }
         league.FixturesGenerated = true;
         await _db.SaveChangesAsync(ct);
-        return (true, string.Empty);
     }
 
     /// <summary>
-    /// Assigns fixtures to weeks so that within each week, each player's home (PlayerA) and away (PlayerB) games are as balanced as possible (~50% each).
+    /// Assigns fixtures to weeks so that: (1) each player has ~50% home/away within each week,
+    /// (2) each player gets a similar number of games per week (even spread), and (3) matches are spread evenly across weeks.
     /// </summary>
     private static List<(int PlayerAId, int PlayerBId, int Leg, int WeekNumber)> AssignFixturesToWeeksBalanced(
         IReadOnlyList<(int PlayerAId, int PlayerBId, int Leg)> fixtures,
@@ -215,7 +249,7 @@ public class LeagueService : ILeagueService
         foreach (var (playerAId, playerBId, leg) in fixtures)
         {
             int bestWeek = 0;
-            int bestCost = int.MaxValue;
+            long bestCost = long.MaxValue;
 
             for (var w = 0; w < weekCount; w++)
             {
@@ -227,10 +261,21 @@ public class LeagueService : ILeagueService
                 int asA2 = balance.GetValueOrDefault(playerBId, (0, 0)).Item1;
                 int asB2 = balance.GetValueOrDefault(playerBId, (0, 0)).Item2;
 
-                // After adding this match: playerA is A once more, playerB is B once more
+                // 1) Home/away balance in this week (prefer ~50% each)
                 int imbA = Math.Abs((asA + 1) - asB);
                 int imbB = Math.Abs(asA2 - (asB2 + 1));
-                int cost = imbA + imbB;
+                int balanceCost = imbA + imbB;
+
+                // 2) Games-per-player in this week: prefer weeks where both have fewer games (even spread across weeks)
+                int gamesAInWeek = asA + asB;
+                int gamesBInWeek = asA2 + asB2;
+                int loadCost = (gamesAInWeek + 1) + (gamesBInWeek + 1);
+
+                // 3) Prefer weeks with fewer matches so far (spread matches evenly across weeks)
+                int weekLoadCost = weekMatchCount[w];
+
+                // Priority: balance > per-player even games > even matches per week
+                long cost = balanceCost * 10000L + loadCost * 100L + weekLoadCost;
 
                 if (cost < bestCost)
                 {

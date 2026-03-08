@@ -1,4 +1,5 @@
-const API_BASE = '/api';
+/** API base URL. Set VITE_API_URL in production (e.g. Netlify) to your .NET API origin. */
+const API_BASE = import.meta.env.VITE_API_URL ?? '/api';
 const AUTH_STORAGE_KEY = 'league-auth';
 
 let token: string | null = null;
@@ -62,6 +63,7 @@ export const leagues = {
   update: (id: number, body: UpdateLeagueRequest) => api<LeagueResponse>(`/leagues/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   setStatus: (id: number, status: string) => api<void>(`/leagues/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
   generateFixtures: (id: number) => api<void>(`/leagues/${id}/generate-fixtures`, { method: 'POST' }),
+  regenerateFixtures: (id: number) => api<void>(`/leagues/${id}/regenerate-fixtures`, { method: 'POST' }),
   delete: (id: number) => api<void>(`/leagues/${id}`, { method: 'DELETE' }),
   setHidden: (id: number, isHidden: boolean) =>
     api<void>(`/leagues/${id}/hidden`, { method: 'PUT', body: JSON.stringify({ isHidden }) }),

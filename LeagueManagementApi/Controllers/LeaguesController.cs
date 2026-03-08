@@ -71,6 +71,15 @@ public class LeaguesController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{id:int}/regenerate-fixtures")]
+    [Authorize]
+    public async Task<ActionResult> RegenerateFixtures(int id, CancellationToken ct)
+    {
+        var (ok, error) = await _leagueService.RegenerateFixturesAsync(id, ct);
+        if (!ok) return BadRequest(error);
+        return NoContent();
+    }
+
     [HttpDelete("{id:int}")]
     [Authorize]
     public async Task<ActionResult> SoftDeleteLeague(int id, CancellationToken ct)

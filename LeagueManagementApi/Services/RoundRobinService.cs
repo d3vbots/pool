@@ -21,9 +21,10 @@ public class RoundRobinService : IRoundRobinService
         var list = playerIds.ToList();
         var fixtures = new List<(int PlayerAId, int PlayerBId, int Leg)>();
 
-        // If odd number, add a "bye" (use -1 or skip; we require even for standard round robin - duplicate first player as bye)
+        // If odd number, add a bye slot (sentinel -1). Never duplicate a real player or they get double the games.
+        const int byeId = -1;
         if (list.Count % 2 != 0)
-            list.Add(list[0]); // bye: match with self will be skipped
+            list.Add(byeId);
 
         int n = list.Count;
         int rounds = n - 1;
@@ -35,7 +36,7 @@ public class RoundRobinService : IRoundRobinService
             {
                 int idA = list[m];
                 int idB = list[n - 1 - m];
-                if (idA == idB) continue; // bye
+                if (idA == byeId || idB == byeId) continue; // skip: one player has a bye this round
                 fixtures.Add((idA, idB, 1));
             }
             // Circle method: fix first, rotate rest clockwise (last moves to second)
