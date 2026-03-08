@@ -4,7 +4,7 @@ WORKDIR /src
 
 # Copy project file and restore dependencies
 COPY *.csproj .
-RUN dotnet restore
+RUN dotnet restore LeagueManagementApi.csproj
 
 # Copy the rest of the project files
 COPY . .
