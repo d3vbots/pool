@@ -3,8 +3,8 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy project file and restore dependencies
-COPY *.csproj .
-RUN dotnet restore LeagueManagementApi.csproj
+COPY ["LeagueManagementApi.csproj", "./"]
+RUN dotnet restore
 
 # Copy the rest of the project files
 COPY . .
