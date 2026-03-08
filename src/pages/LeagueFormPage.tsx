@@ -80,7 +80,7 @@ export function LeagueFormPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-accent-green)] border-t-transparent" />
+        <div className="spinner" />
       </div>
     );
   }
@@ -90,7 +90,7 @@ export function LeagueFormPage() {
       <h1 className="font-display text-2xl sm:text-3xl text-[var(--color-cream)] tracking-wide mb-6">
         {isEdit ? 'Edit League' : 'New League'}
       </h1>
-      <form onSubmit={handleSubmit} className="card-felt space-y-6 p-6">
+      <form onSubmit={handleSubmit} className="card-felt space-y-6 p-4 sm:p-6">
         {error && (
           <p className="text-sm text-[var(--color-accent-red)]">{error}</p>
         )}
@@ -100,7 +100,7 @@ export function LeagueFormPage() {
             <input
               value={form.name}
               onChange={(e) => update({ name: e.target.value })}
-              className="w-full rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2 text-white focus:border-[var(--color-accent-green)] focus:outline-none"
+              className="w-full min-h-[48px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none"
               required
               readOnly={!canEditSettings}
             />
@@ -110,7 +110,7 @@ export function LeagueFormPage() {
             <textarea
               value={form.description ?? ''}
               onChange={(e) => update({ description: e.target.value })}
-              className="w-full rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2 text-white focus:border-[var(--color-accent-green)] focus:outline-none resize-none"
+              className="w-full min-h-[44px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none resize-none"
               rows={2}
               readOnly={!canEditSettings}
             />
@@ -121,7 +121,7 @@ export function LeagueFormPage() {
               type="date"
               value={form.startDate}
               onChange={(e) => update({ startDate: e.target.value })}
-              className="w-full rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2 text-white focus:border-[var(--color-accent-green)] focus:outline-none"
+              className="w-full min-h-[48px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none"
               readOnly={!canEditSettings}
             />
           </div>
@@ -131,7 +131,7 @@ export function LeagueFormPage() {
               type="date"
               value={form.endDate}
               onChange={(e) => update({ endDate: e.target.value })}
-              className="w-full rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2 text-white focus:border-[var(--color-accent-green)] focus:outline-none"
+              className="w-full min-h-[48px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none"
               readOnly={!canEditSettings}
             />
           </div>
@@ -151,7 +151,7 @@ export function LeagueFormPage() {
               min={2}
               value={form.minPlayers}
               onChange={(e) => update({ minPlayers: parseInt(e.target.value, 10) || 2 })}
-              className="w-full rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2 text-white focus:border-[var(--color-accent-green)] focus:outline-none"
+              className="w-full min-h-[48px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none"
               readOnly={!canEditSettings}
             />
           </div>
@@ -162,7 +162,7 @@ export function LeagueFormPage() {
               min={2}
               value={form.maxPlayers}
               onChange={(e) => update({ maxPlayers: parseInt(e.target.value, 10) || 2 })}
-              className="w-full rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2 text-white focus:border-[var(--color-accent-green)] focus:outline-none"
+              className="w-full min-h-[48px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none"
               readOnly={!canEditSettings}
             />
           </div>
@@ -174,7 +174,7 @@ export function LeagueFormPage() {
               step={0.01}
               value={form.registrationFee}
               onChange={(e) => update({ registrationFee: parseFloat(e.target.value) || 0 })}
-              className="w-full rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2 text-white focus:border-[var(--color-accent-green)] focus:outline-none"
+              className="w-full min-h-[48px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none"
               readOnly={!canEditSettings}
             />
           </div>
@@ -185,7 +185,7 @@ export function LeagueFormPage() {
               min={1}
               value={form.matchFormatBestOf}
               onChange={(e) => update({ matchFormatBestOf: parseInt(e.target.value, 10) || 4 })}
-              className="w-full rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2 text-white focus:border-[var(--color-accent-green)] focus:outline-none"
+              className="w-full min-h-[48px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none"
               readOnly={!canEditSettings}
             />
           </div>
@@ -207,7 +207,7 @@ export function LeagueFormPage() {
               min={0}
               value={form.winPoints}
               onChange={(e) => update({ winPoints: parseInt(e.target.value, 10) || 0 })}
-              className="w-full rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2 text-white focus:border-[var(--color-accent-green)] focus:outline-none"
+              className="w-full min-h-[48px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none"
               readOnly={!canEditSettings}
             />
           </div>
@@ -218,7 +218,7 @@ export function LeagueFormPage() {
               min={0}
               value={form.drawPoints}
               onChange={(e) => update({ drawPoints: parseInt(e.target.value, 10) || 0 })}
-              className="w-full rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2 text-white focus:border-[var(--color-accent-green)] focus:outline-none"
+              className="w-full min-h-[48px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none"
               readOnly={!canEditSettings}
             />
           </div>
@@ -229,7 +229,7 @@ export function LeagueFormPage() {
               min={0}
               value={form.lossPoints}
               onChange={(e) => update({ lossPoints: parseInt(e.target.value, 10) || 0 })}
-              className="w-full rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2 text-white focus:border-[var(--color-accent-green)] focus:outline-none"
+              className="w-full min-h-[48px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none"
               readOnly={!canEditSettings}
             />
           </div>
@@ -239,7 +239,7 @@ export function LeagueFormPage() {
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2 text-white focus:border-[var(--color-accent-green)] focus:outline-none"
+                className="w-full min-h-[48px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none"
               >
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s} value={s}>{s}</option>

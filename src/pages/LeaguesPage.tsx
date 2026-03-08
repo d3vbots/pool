@@ -5,22 +5,32 @@ import { HeroPool } from '../components/HeroPool';
 import { POOL_IMAGES } from '../lib/poolImages';
 import type { LeagueResponse } from '../api/client';
 
+const SEARCH_DEBOUNCE_MS = 300;
+
 export function LeaguesPage() {
   const [list, setList] = useState<LeagueResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    leagues.list()
+    const t = setTimeout(() => setSearchQuery(searchInput.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  useEffect(() => {
+    setLoading(true);
+    leagues.list({ q: searchQuery || undefined })
       .then(setList)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [searchQuery]);
 
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[var(--color-gold)] border-t-transparent" />
+        <div className="spinner" />
       </div>
     );
   }
@@ -36,9 +46,19 @@ export function LeaguesPage() {
   return (
     <div className="space-y-6">
       <HeroPool title="Leagues" subtitle="Create and manage your pool leagues." imageUrl={POOL_IMAGES.hero} compact />
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="font-display text-2xl text-[var(--color-cream)] tracking-wide sr-only">All leagues</h2>
-        <Link to="/leagues/new" className="btn-primary inline-flex items-center justify-center min-h-[44px] px-4 py-2.5 text-sm font-semibold">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-1 max-w-md">
+          <label htmlFor="league-search" className="sr-only">Search leagues</label>
+          <input
+            id="league-search"
+            type="search"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search by name or description…"
+            className="w-full min-h-[44px] rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/80 px-3 py-2.5 text-[var(--color-cream)] placeholder-[var(--color-muted)] focus:border-[var(--color-gold)] focus:ring-1 focus:ring-[var(--color-gold)]/30 focus:outline-none"
+          />
+        </div>
+        <Link to="/leagues/new" className="btn-primary inline-flex items-center justify-center min-h-[44px] px-4 py-2.5 text-sm font-semibold shrink-0">
           New League
         </Link>
       </div>
@@ -65,7 +85,7 @@ export function LeaguesPage() {
       </div>
       {list.length === 0 && (
         <div className="card-felt p-8 text-center text-[var(--color-cream-dim)]">
-          No leagues yet. Create one to get started.
+          {searchQuery ? 'No leagues match your search.' : 'No leagues yet. Create one to get started.'}
         </div>
       )}
     </div>

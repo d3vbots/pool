@@ -4,22 +4,8 @@ import { leagues, leaderboard, matches } from '../api/client';
 import { HeroPool } from '../components/HeroPool';
 import { POOL_IMAGES } from '../lib/poolImages';
 import { downloadFixturesPdf } from '../lib/downloadFixturesPdf';
+import { getWeekDateRange } from '../lib/weekDateRange';
 import type { LeagueResponse, LeaderboardEntryResponse, MatchResponse } from '../api/client';
-
-/** Format week date range from league start (e.g. "Jan 1 – Jan 7"). */
-function getWeekDateRange(startDateIso: string, weekNumber: number, endDateIso?: string): string {
-  const start = new Date(startDateIso);
-  const weekStart = new Date(start);
-  weekStart.setDate(weekStart.getDate() + (weekNumber - 1) * 7);
-  let weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6);
-  if (endDateIso) {
-    const end = new Date(endDateIso);
-    if (weekEnd > end) weekEnd = end;
-  }
-  const fmt = (d: Date) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  return `${fmt(weekStart)} – ${fmt(weekEnd)}`;
-}
 
 /** Read-only fixtures and results for public view; groups by week when weekNumber is set. */
 function FixturesAndResultsPublic({ matches: matchList, league }: { matches: MatchResponse[]; league?: LeagueResponse | null }) {
@@ -57,7 +43,7 @@ function FixturesAndResultsPublic({ matches: matchList, league }: { matches: Mat
         <div key={key}>
           <h3 className="text-sm text-[var(--color-gold)] font-medium mb-2">{label}</h3>
           <div className="card-felt overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className="table-scroll">
               <table className="w-full text-left min-w-[320px]">
                 <thead className="bg-[var(--color-surface-elevated)] text-[var(--color-muted)] text-sm">
                   <tr>
@@ -107,22 +93,32 @@ export function StandingsPage() {
   return <StandingsLeagueList />;
 }
 
+const SEARCH_DEBOUNCE_MS = 300;
+
 function StandingsLeagueList() {
   const [list, setList] = useState<LeagueResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    leagues.list()
+    const t = setTimeout(() => setSearchQuery(searchInput.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  useEffect(() => {
+    setLoading(true);
+    leagues.list({ public: true, q: searchQuery || undefined })
       .then(setList)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [searchQuery]);
 
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[var(--color-gold)] border-t-transparent" />
+        <div className="spinner" />
       </div>
     );
   }
@@ -139,6 +135,17 @@ function StandingsLeagueList() {
     <div className="space-y-4 sm:space-y-6">
       <HeroPool title="Standings" subtitle="Pick a league and see who’s on top." imageUrl={POOL_IMAGES.hero} compact />
       <p className="text-[var(--color-cream-dim)] text-sm sm:text-base">Select a league to view the leaderboard.</p>
+      <div className="max-w-md">
+        <label htmlFor="standings-league-search" className="sr-only">Search leagues</label>
+        <input
+          id="standings-league-search"
+          type="search"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search leagues…"
+          className="w-full min-h-[44px] rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/80 px-3 py-2.5 text-[var(--color-cream)] placeholder-[var(--color-muted)] focus:border-[var(--color-gold)] focus:ring-1 focus:ring-[var(--color-gold)]/30 focus:outline-none"
+        />
+      </div>
       <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {list.map((league) => (
           <Link
@@ -152,7 +159,7 @@ function StandingsLeagueList() {
         ))}
       </div>
       {list.length === 0 && (
-        <p className="text-center text-[var(--color-muted)]">No leagues yet.</p>
+        <p className="text-center text-[var(--color-muted)]">{searchQuery ? 'No leagues match your search.' : 'No leagues yet.'}</p>
       )}
     </div>
   );
@@ -166,7 +173,7 @@ function LeagueStandingsView({ leagueId }: { leagueId: number }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    Promise.all([leagues.get(leagueId), leaderboard.get(leagueId), matches.listByLeague(leagueId)])
+    Promise.all([leagues.get(leagueId, { public: true }), leaderboard.get(leagueId), matches.listByLeague(leagueId)])
       .then(([l, e, m]) => {
         setLeague(l);
         setEntries(e);
@@ -179,7 +186,7 @@ function LeagueStandingsView({ leagueId }: { leagueId: number }) {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[var(--color-gold)] border-t-transparent" />
+        <div className="spinner" />
       </div>
     );
   }
@@ -226,8 +233,8 @@ function LeagueStandingsView({ leagueId }: { leagueId: number }) {
       </div>
       {/* Desktop: table */}
       <div className="hidden sm:block card-felt overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+        <div className="table-scroll">
+          <table className="w-full text-left min-w-[500px]">
             <thead className="bg-[var(--color-surface-elevated)] text-[var(--color-muted)] text-sm">
               <tr>
                 <th className="px-4 py-3">Rank</th>

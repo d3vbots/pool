@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Link, Outlet, useParams } from 'react-router-dom';
+import { Link, Outlet, useParams, useNavigate } from 'react-router-dom';
 import { leagues } from '../api/client';
 import type { LeagueResponse } from '../api/client';
 
 export function LeagueDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [league, setLeague] = useState<LeagueResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [togglingHidden, setTogglingHidden] = useState(false);
 
   const leagueId = Number(id);
   const base = `/leagues/${id}`;
@@ -47,10 +50,37 @@ export function LeagueDetailPage() {
     }
   };
 
+  const handleSetHidden = async (isHidden: boolean) => {
+    setError('');
+    setTogglingHidden(true);
+    try {
+      await leagues.setHidden(leagueId, isHidden);
+      const updated = await leagues.get(leagueId);
+      setLeague(updated);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to update visibility');
+    } finally {
+      setTogglingHidden(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Delete this league? It will be hidden from all lists. You can restore it later from the API.')) return;
+    setError('');
+    setDeleting(true);
+    try {
+      await leagues.delete(leagueId);
+      navigate('/leagues');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to delete league');
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-accent-green)] border-t-transparent" />
+        <div className="spinner" />
       </div>
     );
   }
@@ -103,6 +133,26 @@ export function LeagueDetailPage() {
       {error && (
         <p className="text-sm text-[var(--color-accent-red)]">{error}</p>
       )}
+      <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 pt-2 border-t border-[var(--color-border)]">
+        <label className="flex items-center gap-2 cursor-pointer text-sm text-[var(--color-cream-dim)] min-h-[44px]">
+          <input
+            type="checkbox"
+            checked={!!league.isHidden}
+            onChange={(e) => handleSetHidden(e.target.checked)}
+            disabled={togglingHidden}
+            className="rounded border-[var(--color-border)] text-[var(--color-accent-green)] focus:ring-[var(--color-accent-green)] w-5 h-5 shrink-0"
+          />
+          <span>Hidden from public standings</span>
+        </label>
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={deleting}
+          className="min-h-[44px] px-4 py-2.5 text-sm font-medium rounded-lg border border-[var(--color-accent-red)]/50 text-[var(--color-accent-red)] hover:bg-[var(--color-accent-red)]/10 disabled:opacity-50 transition"
+        >
+          {deleting ? 'Deleting…' : 'Delete league'}
+        </button>
+      </div>
       {league.description && (
         <p className="text-[var(--color-cream-dim)] text-sm sm:text-base">{league.description}</p>
       )}

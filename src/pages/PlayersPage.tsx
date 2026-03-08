@@ -3,17 +3,27 @@ import { Link } from 'react-router-dom';
 import { players } from '../api/client';
 import type { PlayerResponse } from '../api/client';
 
+const SEARCH_DEBOUNCE_MS = 300;
+
 export function PlayersPage() {
   const [list, setList] = useState<PlayerResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    const t = setTimeout(() => setSearchQuery(searchInput.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
   const load = () => {
-    players.list()
+    setLoading(true);
+    players.list({ q: searchQuery || undefined })
       .then(setList)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -21,7 +31,7 @@ export function PlayersPage() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [searchQuery]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,19 +64,30 @@ export function PlayersPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[var(--color-gold)] border-t-transparent" />
+        <div className="spinner" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="font-display text-2xl sm:text-3xl text-[var(--color-cream)] tracking-wide">Players</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <h1 className="font-display text-2xl sm:text-3xl text-[var(--color-cream)] tracking-wide shrink-0">Players</h1>
+        <div className="flex-1 max-w-md">
+          <label htmlFor="player-search" className="sr-only">Search players</label>
+          <input
+            id="player-search"
+            type="search"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search by name or phone…"
+            className="w-full min-h-[44px] rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/80 px-3 py-2.5 text-[var(--color-cream)] placeholder-[var(--color-muted)] focus:border-[var(--color-gold)] focus:ring-1 focus:ring-[var(--color-gold)]/30 focus:outline-none"
+          />
+        </div>
         <button
           type="button"
           onClick={() => setShowForm((v) => !v)}
-          className="btn-primary min-h-[44px] px-4 py-2.5 text-sm font-semibold"
+          className="btn-primary min-h-[44px] px-4 py-2.5 text-sm font-semibold shrink-0"
         >
           {showForm ? 'Cancel' : 'New Player'}
         </button>
@@ -101,7 +122,8 @@ export function PlayersPage() {
       )}
 
       <div className="card-felt overflow-hidden">
-        <table className="w-full text-left">
+        <div className="table-scroll">
+        <table className="w-full text-left min-w-[280px]">
           <thead className="bg-[var(--color-surface-elevated)] text-[var(--color-muted)] text-sm">
             <tr>
               <th className="px-4 py-3">Name</th>
@@ -134,9 +156,12 @@ export function PlayersPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
       {list.length === 0 && !showForm && (
-        <p className="text-center text-[var(--color-muted)]">No players. Add one to register them in leagues.</p>
+        <p className="text-center text-[var(--color-muted)]">
+          {searchQuery ? 'No players match your search.' : 'No players. Add one to register them in leagues.'}
+        </p>
       )}
     </div>
   );

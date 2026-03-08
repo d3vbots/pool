@@ -12,9 +12,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var conn = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Data Source=league.db";
-builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlite(conn));
+var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(conn))
+    throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required. Set it to your Supabase (PostgreSQL) connection string.");
+builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(conn));
 
 builder.Services.AddScoped<IRoundRobinService, RoundRobinService>();
 builder.Services.AddScoped<IMatchResultService, MatchResultService>();
@@ -59,17 +60,7 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.EnsureCreatedAsync();
-    // Add WeekNumber column if missing (e.g. existing DB created before week-based fixtures)
-    try
-    {
-        await db.Database.ExecuteSqlRawAsync(
-            "ALTER TABLE Matches ADD COLUMN WeekNumber INTEGER NULL");
-    }
-    catch
-    {
-        // Column already exists (e.g. new DB) or other schema issue — ignore
-    }
+    await db.EnsureLeagueManagementSchemaAsync();
     await SeedData.InitializeAsync(db);
 }
 

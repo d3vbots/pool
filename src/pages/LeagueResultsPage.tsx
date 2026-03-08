@@ -70,7 +70,7 @@ export function LeagueResultsPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-accent-green)] border-t-transparent" />
+        <div className="spinner" />
       </div>
     );
   }

@@ -24,7 +24,7 @@ export function DashboardPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[var(--color-gold)] border-t-transparent" />
+        <div className="spinner" />
       </div>
     );
   }
@@ -59,13 +59,13 @@ export function DashboardPage() {
       ) : (
         <>
           <section>
-            <h2 className="font-display text-2xl sm:text-3xl text-[var(--color-cream)] mb-4 tracking-wide">Active Leagues</h2>
+            <h2 className="section-title">Active Leagues</h2>
             <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {activeLeagues.map((league) => (
                 <Link
                   key={league.id}
                   to={`/leagues/${league.id}`}
-                  className="card-felt block p-4 sm:p-5 transition min-h-[44px] active:opacity-90"
+                  className="card-felt block p-4 sm:p-5 transition min-h-[48px] active:opacity-90"
                 >
                   <h3 className="font-semibold text-[var(--color-cream)]">{league.name}</h3>
                   <p className="mt-1 text-sm text-[var(--color-cream-dim)]">
@@ -79,10 +79,10 @@ export function DashboardPage() {
             </div>
           </section>
           <section>
-            <h2 className="font-display text-2xl sm:text-3xl text-[var(--color-cream)] mb-4 tracking-wide">All Leagues</h2>
+            <h2 className="section-title">All Leagues</h2>
             <div className="card-felt overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
+              <div className="table-scroll">
+                <table className="w-full text-left min-w-[320px]">
                   <thead className="bg-[var(--color-surface-elevated)] text-[var(--color-muted)] text-sm">
                     <tr>
                       <th className="px-4 py-3">Name</th>

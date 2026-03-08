@@ -21,7 +21,7 @@ export function LeagueLeaderboardPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-accent-green)] border-t-transparent" />
+        <div className="spinner" />
       </div>
     );
   }
@@ -59,8 +59,8 @@ export function LeagueLeaderboardPage() {
       </div>
       {/* Desktop: table */}
       <div className="hidden sm:block card-felt overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+        <div className="table-scroll">
+          <table className="w-full text-left min-w-[500px]">
             <thead className="bg-[var(--color-surface-elevated)] text-[var(--color-muted)] text-sm">
               <tr>
                 <th className="px-4 py-3">Rank</th>

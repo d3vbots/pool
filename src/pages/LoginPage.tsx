@@ -4,8 +4,8 @@ import { useAuthStore, selectIsAuthenticated } from '../store/authStore';
 import { LOGO_PATH, POOL_IMAGES } from '../lib/poolImages';
 
 export function LoginPage() {
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((s) => s.login);
@@ -31,12 +31,13 @@ export function LoginPage() {
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-3 py-8 relative">
       <div
-        className="absolute inset-0 bg-cover bg-center opacity-25"
+        className="absolute inset-0 bg-cover bg-center opacity-20"
         style={{ backgroundImage: `url(${POOL_IMAGES.hero})` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-surface)] via-[var(--color-surface)]/95 to-[var(--color-surface)]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-surface)] via-[var(--color-surface)]/97 to-[var(--color-surface)]" />
       <div className="relative w-full max-w-sm">
-        <div className="card-felt p-6 sm:p-8 shadow-2xl">
+        <div className="card-felt p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[var(--color-gold)] to-transparent opacity-70" />
           <div className="flex items-center justify-center gap-3 mb-6">
             <img src={LOGO_PATH} alt="" className="h-12 w-auto max-w-[140px] object-contain" />
             <span className="font-display text-2xl text-[var(--color-cream)] tracking-wide">Pool League</span>
@@ -80,7 +81,7 @@ export function LoginPage() {
             </button>
           </form>
           <p className="mt-4 text-center text-xs text-[var(--color-muted)]">
-            Demo: admin / admin
+            Sign in to manage leagues, players and results.
           </p>
         </div>
       </div>

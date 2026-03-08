@@ -15,16 +15,16 @@ public class LeaguesController : ControllerBase
     public LeaguesController(ILeagueService leagueService) => _leagueService = leagueService;
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<LeagueResponse>>> GetLeagues(CancellationToken ct)
+    public async Task<ActionResult<IReadOnlyList<LeagueResponse>>> GetLeagues([FromQuery] bool @public = false, [FromQuery] string? q = null, CancellationToken ct = default)
     {
-        var list = await _leagueService.GetAllAsync(ct);
+        var list = await _leagueService.GetAllAsync(forPublic: @public, search: q, ct);
         return Ok(list);
     }
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<LeagueResponse>> GetLeague(int id, CancellationToken ct)
+    public async Task<ActionResult<LeagueResponse>> GetLeague(int id, [FromQuery] bool @public = false, CancellationToken ct = default)
     {
-        var league = await _leagueService.GetByIdAsync(id, ct);
+        var league = await _leagueService.GetByIdAsync(id, forPublic: @public, ct);
         if (league == null) return NotFound();
         return Ok(league);
     }
@@ -70,6 +70,38 @@ public class LeaguesController : ControllerBase
         if (!ok) return BadRequest(error);
         return NoContent();
     }
+
+    [HttpDelete("{id:int}")]
+    [Authorize]
+    public async Task<ActionResult> SoftDeleteLeague(int id, CancellationToken ct)
+    {
+        var ok = await _leagueService.SoftDeleteAsync(id, ct);
+        if (!ok) return NotFound();
+        return NoContent();
+    }
+
+    [HttpPut("{id:int}/hidden")]
+    [Authorize]
+    public async Task<ActionResult> SetLeagueHidden(int id, [FromBody] SetHiddenRequest body, CancellationToken ct)
+    {
+        var ok = await _leagueService.SetHiddenAsync(id, body.IsHidden, ct);
+        if (!ok) return NotFound();
+        return NoContent();
+    }
+
+    [HttpPost("{id:int}/restore")]
+    [Authorize]
+    public async Task<ActionResult> RestoreLeague(int id, CancellationToken ct)
+    {
+        var ok = await _leagueService.RestoreAsync(id, ct);
+        if (!ok) return NotFound();
+        return NoContent();
+    }
+}
+
+public class SetHiddenRequest
+{
+    public bool IsHidden { get; set; }
 }
 
 public class SetStatusRequest

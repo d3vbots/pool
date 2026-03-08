@@ -78,7 +78,7 @@ export function LeaguePlayersPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[var(--color-gold)] border-t-transparent" />
+        <div className="spinner" />
       </div>
     );
   }
@@ -88,7 +88,8 @@ export function LeaguePlayersPage() {
       <h2 className="font-display text-xl sm:text-2xl text-[var(--color-cream)] tracking-wide">Players ({leaguePlayers.length} / {league.maxPlayers})</h2>
       {error && <p className="text-sm text-[var(--color-accent-red)]">{error}</p>}
 
-      <div className="card-felt overflow-hidden overflow-x-auto">
+      <div className="card-felt overflow-hidden">
+        <div className="table-scroll">
         <table className="w-full text-left min-w-[400px]">
           <thead className="bg-[var(--color-surface-elevated)] text-[var(--color-muted)] text-sm">
             <tr>
@@ -110,11 +111,11 @@ export function LeaguePlayersPage() {
                     {lp.playerName}
                   </Link>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-3 sm:px-4 py-3">
                   <button
                     type="button"
                     onClick={() => handlePaymentToggle(lp.playerId, lp.paymentStatus)}
-                    className={`min-h-[36px] px-2.5 py-1 rounded-lg text-sm font-medium transition ${
+                    className={`min-h-[44px] min-w-[44px] px-2.5 py-1 rounded-lg text-sm font-medium transition ${
                       lp.paymentStatus === 'Paid'
                         ? 'bg-[var(--color-accent-green)]/20 text-[var(--color-accent-green)] border border-[var(--color-accent-green)]/50'
                         : 'bg-[var(--color-surface-elevated)] text-[var(--color-cream-dim)] border border-[var(--color-border)] hover:border-[var(--color-gold)]/50'
@@ -137,6 +138,7 @@ export function LeaguePlayersPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {canAdd && (

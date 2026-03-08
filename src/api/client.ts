@@ -49,16 +49,32 @@ export async function api<T>(
 }
 
 export const leagues = {
-  list: () => api<LeagueResponse[]>('/leagues'),
-  get: (id: number) => api<LeagueResponse>(`/leagues/${id}`),
+  list: (opts?: { public?: boolean; q?: string }) => {
+    const params = new URLSearchParams();
+    if (opts?.public) params.set('public', 'true');
+    if (opts?.q?.trim()) params.set('q', opts.q.trim());
+    const query = params.toString();
+    return api<LeagueResponse[]>(`/leagues${query ? `?${query}` : ''}`);
+  },
+  get: (id: number, opts?: { public?: boolean }) =>
+    api<LeagueResponse>(`/leagues/${id}${opts?.public ? '?public=true' : ''}`),
   create: (body: CreateLeagueRequest) => api<LeagueResponse>('/leagues', { method: 'POST', body: JSON.stringify(body) }),
   update: (id: number, body: UpdateLeagueRequest) => api<LeagueResponse>(`/leagues/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   setStatus: (id: number, status: string) => api<void>(`/leagues/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
   generateFixtures: (id: number) => api<void>(`/leagues/${id}/generate-fixtures`, { method: 'POST' }),
+  delete: (id: number) => api<void>(`/leagues/${id}`, { method: 'DELETE' }),
+  setHidden: (id: number, isHidden: boolean) =>
+    api<void>(`/leagues/${id}/hidden`, { method: 'PUT', body: JSON.stringify({ isHidden }) }),
+  restore: (id: number) => api<void>(`/leagues/${id}/restore`, { method: 'POST' }),
 };
 
 export const players = {
-  list: () => api<PlayerResponse[]>('/players'),
+  list: (opts?: { q?: string }) => {
+    const params = new URLSearchParams();
+    if (opts?.q?.trim()) params.set('q', opts.q.trim());
+    const query = params.toString();
+    return api<PlayerResponse[]>(`/players${query ? `?${query}` : ''}`);
+  },
   get: (id: number) => api<PlayerResponse>(`/players/${id}`),
   getLeagues: (id: number) => api<PlayerLeagueEntryResponse[]>(`/players/${id}/leagues`),
   getMatches: (id: number, leagueId?: number) =>
@@ -106,6 +122,8 @@ export interface LeagueResponse {
   status: string;
   fixturesGenerated: boolean;
   playerCount: number;
+  isDeleted?: boolean;
+  isHidden?: boolean;
 }
 
 export interface CreateLeagueRequest {

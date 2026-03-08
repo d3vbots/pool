@@ -23,11 +23,19 @@ public class PlayersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<PlayerResponse>>> GetPlayers(CancellationToken ct)
+    public async Task<ActionResult<IReadOnlyList<PlayerResponse>>> GetPlayers([FromQuery] string? q = null, CancellationToken ct = default)
     {
-        var list = await _db.Players
+        var query = _db.Players
             .AsNoTracking()
-            .Where(p => p.IsActive)
+            .Where(p => p.IsActive);
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var term = $"%{q.Trim()}%";
+            query = query.Where(p =>
+                EF.Functions.ILike(p.Name, term) ||
+                EF.Functions.ILike(p.PhoneNumber, term));
+        }
+        var list = await query
             .OrderBy(p => p.Name)
             .Select(p => new PlayerResponse
             {

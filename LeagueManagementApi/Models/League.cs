@@ -17,6 +17,10 @@ public class League
     public int LossPoints { get; set; } = 0;
     public LeagueStatus Status { get; set; } = LeagueStatus.Draft;
     public bool FixturesGenerated { get; set; }
+    /// <summary>When true, league is excluded from all lists and GetById returns 404 (soft delete).</summary>
+    public bool IsDeleted { get; set; }
+    /// <summary>When true, league is hidden from public listings (e.g. standings) but still visible to admins.</summary>
+    public bool IsHidden { get; set; }
 
     public ICollection<LeaguePlayer> LeaguePlayers { get; set; } = new List<LeaguePlayer>();
     public ICollection<Match> Matches { get; set; } = new List<Match>();

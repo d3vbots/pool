@@ -36,4 +36,6 @@ public class LeagueResponse
     public string Status { get; set; } = string.Empty;
     public bool FixturesGenerated { get; set; }
     public int PlayerCount { get; set; }
+    public bool IsDeleted { get; set; }
+    public bool IsHidden { get; set; }
 }

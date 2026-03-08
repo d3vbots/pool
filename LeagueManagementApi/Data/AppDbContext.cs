@@ -1,10 +1,15 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using LeagueManagementApi.Models;
 
 namespace LeagueManagementApi.Data;
 
 public class AppDbContext : DbContext
 {
+    /// <summary>Converts Unspecified DateTime to UTC so Npgsql accepts it for timestamp with time zone.</summary>
+    private static readonly ValueConverter<DateTime, DateTime> UtcConverter =
+        new(v => v.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(v, DateTimeKind.Utc) : v.ToUniversalTime(), v => v);
+
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<League> Leagues => Set<League>();
@@ -33,6 +38,8 @@ public class AppDbContext : DbContext
         {
             e.HasIndex(l => l.Status);
             e.Property(l => l.RegistrationFee).HasPrecision(18, 2);
+            e.Property(l => l.StartDate).HasConversion(UtcConverter);
+            e.Property(l => l.EndDate).HasConversion(UtcConverter);
         });
         builder.Entity<Match>().HasIndex(m => new { m.LeagueId, m.Status });
         builder.Entity<LeaguePlayer>().HasIndex(lp => lp.LeagueId);

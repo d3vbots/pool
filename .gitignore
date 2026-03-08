@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Secrets and local config (copy from .example and fill in)
+LeagueManagementApi/appsettings.Development.json
+.env
+.env.local
+.env.*.local

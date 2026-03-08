@@ -40,7 +40,7 @@ export function PlayerDetailPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[var(--color-gold)] border-t-transparent" />
+        <div className="spinner" />
       </div>
     );
   }
@@ -143,7 +143,7 @@ export function PlayerDetailPage() {
                 <div key={leagueId}>
                   <h3 className="text-sm text-[var(--color-gold)] font-medium mb-2">{leagueName}</h3>
                   <div className="card-felt overflow-hidden">
-                    <div className="overflow-x-auto">
+                    <div className="table-scroll">
                       <table className="w-full text-left min-w-[280px]">
                         <thead className="bg-[var(--color-surface-elevated)] text-[var(--color-muted)] text-sm">
                           <tr>

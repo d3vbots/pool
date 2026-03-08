@@ -2,22 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import { matches } from '../api/client';
 import { downloadFixturesPdf } from '../lib/downloadFixturesPdf';
+import { getWeekDateRange } from '../lib/weekDateRange';
 import type { MatchResponse, LeagueResponse } from '../api/client';
-
-/** Format week date range from league start (e.g. "Jan 1 – Jan 7"). */
-function getWeekDateRange(startDateIso: string, weekNumber: number, endDateIso?: string): string {
-  const start = new Date(startDateIso);
-  const weekStart = new Date(start);
-  weekStart.setDate(weekStart.getDate() + (weekNumber - 1) * 7);
-  let weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6);
-  if (endDateIso) {
-    const end = new Date(endDateIso);
-    if (weekEnd > end) weekEnd = end;
-  }
-  const fmt = (d: Date) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  return `${fmt(weekStart)} – ${fmt(weekEnd)}`;
-}
 
 export function LeagueFixturesPage() {
   const { id } = useParams();
@@ -38,7 +24,7 @@ export function LeagueFixturesPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[var(--color-gold)] border-t-transparent" />
+        <div className="spinner" />
       </div>
     );
   }
@@ -118,7 +104,7 @@ export function LeagueFixturesPage() {
           <div key={key}>
             <h3 className="text-sm text-[var(--color-gold)] mb-2 font-medium">{label}</h3>
             <div className="card-felt overflow-hidden">
-              <div className="overflow-x-auto">
+              <div className="table-scroll">
                 <table className="w-full text-left min-w-[320px]">
                   <thead className="bg-[var(--color-surface-elevated)] text-[var(--color-muted)] text-sm">
                     <tr>

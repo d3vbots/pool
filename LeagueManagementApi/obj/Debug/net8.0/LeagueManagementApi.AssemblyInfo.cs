@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LeagueManagementApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f2f2231a3795b2b266152b27c358279f8e1dacee")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e9444c31828190a801272afbff4865f357f78fd1")]
 [assembly: System.Reflection.AssemblyProductAttribute("LeagueManagementApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LeagueManagementApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
