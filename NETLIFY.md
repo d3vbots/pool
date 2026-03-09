@@ -8,6 +8,8 @@ This app is a **React frontend** only. The League Management API (.NET) must be 
 - **Publish directory:** `dist`
 - **Base directory:** (leave empty, root of repo)
 
+The repo includes `public/_redirects` so that all routes (e.g. `/leagues`, `/standings`) are served `index.html` with status 200. That way refreshes and direct links work instead of showing “Page not found”.
+
 ## Environment variables
 
 Set these in **Netlify → Site → Site configuration → Environment variables**.
