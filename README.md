@@ -2,6 +2,10 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+## Deployed frontend (Render, Netlify, etc.)
+
+If the frontend is deployed separately from the API, set **`VITE_API_URL`** in your deployment environment to the API origin (no trailing slash), e.g. `https://pool-8w66.onrender.com`. The app will then call that API instead of relative `/api` (or localhost). Re-deploy after changing this so the build picks it up.
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh

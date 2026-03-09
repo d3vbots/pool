@@ -1,5 +1,6 @@
-/** API base URL. Set VITE_API_URL in production (e.g. Netlify) to your .NET API origin. */
-const API_BASE = import.meta.env.VITE_API_URL ?? '/api';
+/** API base URL. In dev we use /api (Vite proxy). In production set VITE_API_URL to your API origin (e.g. https://pool-8w66.onrender.com); /api is appended. */
+const rawBase = import.meta.env.VITE_API_URL as string | undefined;
+const API_BASE = rawBase ? `${rawBase.replace(/\/$/, '')}/api` : '/api';
 const AUTH_STORAGE_KEY = 'league-auth';
 
 let token: string | null = null;
