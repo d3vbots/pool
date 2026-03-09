@@ -75,10 +75,6 @@ export function PlayerDetailPage() {
           {player.name}
         </h1>
         <dl className="mt-4 space-y-2 text-sm">
-          <div>
-            <dt className="text-[var(--color-muted)]">Phone</dt>
-            <dd className="text-[var(--color-cream)]">{player.phoneNumber || '—'}</dd>
-          </div>
           {player.profileImageUrl && (
             <div>
               <dt className="text-[var(--color-muted)]">Photo</dt>

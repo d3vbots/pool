@@ -127,7 +127,6 @@ export function PlayersPage() {
           <thead className="bg-[var(--color-surface-elevated)] text-[var(--color-muted)] text-sm">
             <tr>
               <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Phone</th>
               <th className="px-4 py-3 w-24"></th>
             </tr>
           </thead>
@@ -142,7 +141,6 @@ export function PlayersPage() {
                     {p.name}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-[var(--color-cream-dim)]">{p.phoneNumber}</td>
                 <td className="px-4 py-3">
                   <button
                     type="button"
