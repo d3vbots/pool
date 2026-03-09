@@ -55,6 +55,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Root and health endpoints so Render/load balancers get 200 instead of 404
+app.MapGet("/", () => Results.Ok(new { status = "ok", service = "LeagueManagementApi" }));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
+
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
