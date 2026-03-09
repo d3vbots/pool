@@ -20,8 +20,9 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public ActionResult<LoginResponse> Login([FromBody] LoginRequest req)
     {
-        // Demo: accept admin/admin. In production use proper user store and password hashing.
-        if (req.Username != "admin" || req.Password != "admin")
+        var adminUser = _config["Admin:Username"] ?? "admin";
+        var adminPassword = _config["Admin:Password"] ?? "admin";
+        if (req.Username != adminUser || req.Password != adminPassword)
             return Unauthorized("Invalid credentials.");
 
         var key = _config["Jwt:Key"] ?? "LeagueManagementSecretKeyThatIsAtLeast32CharactersLong!";
@@ -31,7 +32,7 @@ public class AuthController : ControllerBase
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"] ?? "LeagueManagementApi",
             audience: _config["Jwt:Audience"] ?? "LeagueManagementApp",
-            claims: new[] { new Claim(ClaimTypes.Name, "admin"), new Claim(ClaimTypes.Role, "Admin") },
+            claims: new[] { new Claim(ClaimTypes.Name, adminUser), new Claim(ClaimTypes.Role, "Admin") },
             expires: expires,
             signingCredentials: creds
         );
