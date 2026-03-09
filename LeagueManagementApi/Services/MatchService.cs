@@ -49,6 +49,7 @@ public class MatchService : IMatchService
             .Include(m => m.PlayerA)
             .Include(m => m.PlayerB)
             .Include(m => m.League)
+            .Where(m => m.League != null && !m.League.IsDeleted && !m.League.IsHidden)
             .OrderBy(m => m.LeagueId)
             .ThenBy(m => m.WeekNumber ?? int.MaxValue)
             .ThenBy(m => m.Leg)

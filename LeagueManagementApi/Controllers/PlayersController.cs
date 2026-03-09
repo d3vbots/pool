@@ -76,6 +76,7 @@ public class PlayersController : ControllerBase
             .AsNoTracking()
             .Where(lp => lp.PlayerId == id)
             .Include(lp => lp.League)
+            .Where(lp => lp.League != null && !lp.League.IsDeleted && !lp.League.IsHidden)
             .OrderByDescending(lp => lp.League!.StartDate)
             .Select(lp => new PlayerLeagueEntryResponse
             {
