@@ -56,12 +56,52 @@ export function PlayerDetailPage() {
     );
   }
 
-  // Group matches by league
+  // Group matches by league, then by week (or leg if no weekNumber)
   const matchesByLeague = matches.reduce<Record<number, MatchResponse[]>>((acc, m) => {
     (acc[m.leagueId] = acc[m.leagueId] ?? []).push(m);
     return acc;
   }, {});
   const leagueIdsWithMatches = Object.keys(matchesByLeague).map(Number);
+
+  const useWeeks = matches.some((m) => m.weekNumber != null);
+
+  function groupByWeekOrLeg(list: MatchResponse[]): { key: string; label: string; list: MatchResponse[]; completed: number }[] {
+    if (useWeeks) {
+      const byWeek = list.reduce<Record<number, MatchResponse[]>>((acc, m) => {
+        const w = m.weekNumber ?? 0;
+        (acc[w] = acc[w] ?? []).push(m);
+        return acc;
+      }, {});
+      return Object.entries(byWeek)
+        .sort(([a], [b]) => Number(a) - Number(b))
+        .map(([week, weekMatches]) => {
+          const completed = weekMatches.filter((m) => m.status === 'Completed').length;
+          const weekNum = Number(week);
+          const label = weekNum === 0 ? 'Unassigned' : `Week ${weekNum}`;
+          return {
+            key: `week-${week}`,
+            label: `${label} — ${completed}/${weekMatches.length} completed`,
+            list: weekMatches,
+            completed,
+          };
+        });
+    }
+    const byLeg = list.reduce<Record<number, MatchResponse[]>>((acc, m) => {
+      (acc[m.leg] = acc[m.leg] ?? []).push(m);
+      return acc;
+    }, {});
+    return Object.entries(byLeg)
+      .sort(([a], [b]) => Number(a) - Number(b))
+      .map(([leg, legMatches]) => {
+        const completed = legMatches.filter((m) => m.status === 'Completed').length;
+        return {
+          key: `leg-${leg}`,
+          label: `Leg ${leg} — ${completed}/${legMatches.length} completed`,
+          list: legMatches,
+          completed,
+        };
+      });
+  }
 
   return (
     <div className="space-y-6">
@@ -135,41 +175,47 @@ export function PlayerDetailPage() {
             {leagueIdsWithMatches.map((leagueId) => {
               const list = matchesByLeague[leagueId];
               const leagueName = list?.[0]?.leagueName ?? `League ${leagueId}`;
+              const weekGroups = groupByWeekOrLeg(list ?? []);
               return (
-                <div key={leagueId}>
-                  <h3 className="text-sm text-[var(--color-gold)] font-medium mb-2">{leagueName}</h3>
-                  <div className="card-felt overflow-hidden">
-                    <div className="table-scroll">
-                      <table className="w-full text-left min-w-[280px]">
-                        <thead className="bg-[var(--color-surface-elevated)] text-[var(--color-muted)] text-sm">
-                          <tr>
-                            <th className="px-4 py-3">Match</th>
-                            <th className="px-4 py-3 text-center">Score</th>
-                            <th className="px-4 py-3">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[var(--color-border)]">
-                          {list?.map((m) => (
-                            <tr key={m.id} className="hover:bg-white/5">
-                              <td className="px-4 py-3 text-[var(--color-cream)]">
-                                {m.playerAName} vs {m.playerBName}
-                              </td>
-                              <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">
-                                {m.status === 'Completed' && m.playerAScore != null && m.playerBScore != null
-                                  ? `${m.playerAScore} – ${m.playerBScore}`
-                                  : '–'}
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className={m.status === 'Completed' ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-muted)]'}>
-                                  {m.status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                <div key={leagueId} className="space-y-4">
+                  <h3 className="text-sm text-[var(--color-gold)] font-medium">{leagueName}</h3>
+                  {weekGroups.map(({ key, label, list: weekList }) => (
+                    <div key={key}>
+                      <h4 className="text-xs font-medium text-[var(--color-cream-dim)] mb-1.5">{label}</h4>
+                      <div className="card-felt overflow-hidden">
+                        <div className="table-scroll">
+                          <table className="w-full text-left min-w-[280px]">
+                            <thead className="bg-[var(--color-surface-elevated)] text-[var(--color-muted)] text-sm">
+                              <tr>
+                                <th className="px-4 py-3">Match</th>
+                                <th className="px-4 py-3 text-center">Score</th>
+                                <th className="px-4 py-3">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[var(--color-border)]">
+                              {weekList.map((m) => (
+                                <tr key={m.id} className="hover:bg-white/5">
+                                  <td className="px-4 py-3 text-[var(--color-cream)]">
+                                    {m.playerAName} vs {m.playerBName}
+                                  </td>
+                                  <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">
+                                    {m.status === 'Completed' && m.playerAScore != null && m.playerBScore != null
+                                      ? `${m.playerAScore} – ${m.playerBScore}`
+                                      : '–'}
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <span className={m.status === 'Completed' ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-muted)]'}>
+                                      {m.status}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
               );
             })}
