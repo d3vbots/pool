@@ -5,11 +5,24 @@ import { HeroPool } from '../components/HeroPool';
 import { POOL_IMAGES } from '../lib/poolImages';
 import { downloadFixturesPdf } from '../lib/downloadFixturesPdf';
 import { getWeekDateRange } from '../lib/weekDateRange';
+import { computeMatchOdds, getLeagueDrawRate } from '../lib/odds';
 import type { LeagueResponse, LeaderboardEntryResponse, MatchResponse } from '../api/client';
 
-/** Read-only fixtures and results for public view; groups by week when weekNumber is set. */
-function FixturesAndResultsPublic({ matches: matchList, league }: { matches: MatchResponse[]; league?: LeagueResponse | null }) {
+/** Read-only fixtures and results for public view; groups by week when weekNumber is set. Shows odds for pending matches when leaderboard is provided. */
+function FixturesAndResultsPublic({
+  matches: matchList,
+  league,
+  leaderboardEntries = [],
+}: {
+  matches: MatchResponse[];
+  league?: LeagueResponse | null;
+  leaderboardEntries?: LeaderboardEntryResponse[];
+}) {
   const useWeeks = matchList.some((m) => m.weekNumber != null);
+  const drawRate = getLeagueDrawRate(matchList);
+  const entryByPlayerId = new Map<number, LeaderboardEntryResponse>(leaderboardEntries.map((e) => [e.playerId, e]));
+  const showOdds = matchList.some((m) => m.status === 'Pending') && leaderboardEntries.length > 0;
+
   const groups: { key: string; label: string; list: MatchResponse[] }[] = useWeeks
     ? (() => {
         const byWeek = matchList.reduce<Record<number, MatchResponse[]>>((acc, m) => {
@@ -49,29 +62,50 @@ function FixturesAndResultsPublic({ matches: matchList, league }: { matches: Mat
                   <tr>
                     <th className="px-4 py-3">Match</th>
                     <th className="px-4 py-3 text-center">Score</th>
+                    {showOdds && <th className="px-4 py-3 text-center">Odds (A / D / B)</th>}
                     <th className="px-4 py-3">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border)]">
-                  {list.map((m) => (
-                    <tr key={m.id} className="hover:bg-white/5">
-                      <td className="px-4 py-3 text-[var(--color-cream)]">
-                        <Link to={`/player/${m.playerAId}`} className="hover:text-[var(--color-gold)] transition underline underline-offset-2">{m.playerAName}</Link>
-                        {' vs '}
-                        <Link to={`/player/${m.playerBId}`} className="hover:text-[var(--color-gold)] transition underline underline-offset-2">{m.playerBName}</Link>
-                      </td>
-                      <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">
-                        {m.status === 'Completed' && m.playerAScore != null && m.playerBScore != null
-                          ? `${m.playerAScore} – ${m.playerBScore}`
-                          : '–'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={m.status === 'Completed' ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-muted)]'}>
-                          {m.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {list.map((m) => {
+                    const odds = showOdds && m.status === 'Pending'
+                      ? computeMatchOdds(entryByPlayerId.get(m.playerAId), entryByPlayerId.get(m.playerBId), drawRate)
+                      : null;
+                    return (
+                      <tr key={m.id} className="hover:bg-white/5">
+                        <td className="px-4 py-3 text-[var(--color-cream)]">
+                          <Link to={`/player/${m.playerAId}`} className="hover:text-[var(--color-gold)] transition underline underline-offset-2">{m.playerAName}</Link>
+                          {' vs '}
+                          <Link to={`/player/${m.playerBId}`} className="hover:text-[var(--color-gold)] transition underline underline-offset-2">{m.playerBName}</Link>
+                        </td>
+                        <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">
+                          {m.status === 'Completed' && m.playerAScore != null && m.playerBScore != null
+                            ? `${m.playerAScore} – ${m.playerBScore}`
+                            : '–'}
+                        </td>
+                        {showOdds && (
+                          <td className="px-4 py-3 text-center text-[var(--color-cream-dim)] text-sm whitespace-nowrap" title="Player A win / Draw / Player B win (based on league form)">
+                            {odds ? (
+                              <span>
+                                <span className="text-[var(--color-cream)]">{odds.oddsPlayerA.toFixed(2)}</span>
+                                {' / '}
+                                {odds.oddsDraw.toFixed(2)}
+                                {' / '}
+                                <span className="text-[var(--color-cream)]">{odds.oddsPlayerB.toFixed(2)}</span>
+                              </span>
+                            ) : (
+                              '–'
+                            )}
+                          </td>
+                        )}
+                        <td className="px-4 py-3">
+                          <span className={m.status === 'Completed' ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-muted)]'}>
+                            {m.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -296,7 +330,12 @@ function LeagueStandingsView({ leagueId }: { leagueId: number }) {
               Download PDF
             </button>
           </div>
-          <FixturesAndResultsPublic matches={matchList} league={league} />
+          {matchList.some((m) => m.status === 'Pending') && (
+            <p className="text-sm text-[var(--color-cream-dim)] -mt-1 mb-2">
+              Odds are based on current league form (points per game). Lower odds = more likely. For fun only.
+            </p>
+          )}
+          <FixturesAndResultsPublic matches={matchList} league={league} leaderboardEntries={entries} />
         </>
       )}
     </div>

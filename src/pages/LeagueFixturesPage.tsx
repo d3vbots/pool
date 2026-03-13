@@ -1,30 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
-import { matches, leaderboard } from '../api/client';
+import { matches } from '../api/client';
 import { downloadFixturesPdf } from '../lib/downloadFixturesPdf';
 import { getWeekDateRange } from '../lib/weekDateRange';
-import { computeMatchOdds, getLeagueDrawRate } from '../lib/odds';
-import type { MatchResponse, LeagueResponse, LeaderboardEntryResponse } from '../api/client';
+import type { MatchResponse, LeagueResponse } from '../api/client';
 
 export function LeagueFixturesPage() {
   const { id } = useParams();
   const leagueId = Number(id);
   const { league } = (useOutletContext() as { league?: LeagueResponse | null }) ?? {};
   const [list, setList] = useState<MatchResponse[]>([]);
-  const [leaderboardList, setLeaderboardList] = useState<LeaderboardEntryResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (!id) return;
-    Promise.all([
-      matches.listByLeague(leagueId),
-      leaderboard.get(leagueId).catch(() => [] as LeaderboardEntryResponse[]),
-    ])
-      .then(([matchList, lb]) => {
-        setList(matchList);
-        setLeaderboardList(lb);
-      })
+    matches.listByLeague(leagueId)
+      .then(setList)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [id, leagueId]);
@@ -90,9 +82,6 @@ export function LeagueFixturesPage() {
     });
   };
 
-  const drawRate = getLeagueDrawRate(list);
-  const entryByPlayerId = new Map<number, LeaderboardEntryResponse>(leaderboardList.map((e) => [e.playerId, e]));
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -110,11 +99,6 @@ export function LeagueFixturesPage() {
           Fixtures are spread across {new Set(list.map((m) => m.weekNumber).filter(Boolean)).size} weeks. Each week shows which games should be played in that period.
         </p>
       )}
-      {list.some((m) => m.status === 'Pending') && (
-        <p className="text-sm text-[var(--color-cream-dim)]">
-          Odds are based on current league form (points per game) and draw rate. Lower odds = more likely.
-        </p>
-      )}
       <div className="space-y-6">
         {groups.map(({ key, label, matches: matchesList }) => (
           <div key={key}>
@@ -127,51 +111,26 @@ export function LeagueFixturesPage() {
                       <th className="px-4 py-3">Player A</th>
                       <th className="px-4 py-3 text-center">Score</th>
                       <th className="px-4 py-3">Player B</th>
-                      {list.some((m) => m.status === 'Pending') && <th className="px-4 py-3 text-center">Odds (A / D / B)</th>}
                       <th className="px-4 py-3">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--color-border)]">
-                    {matchesList.map((m) => {
-                      const odds = m.status === 'Pending'
-                        ? computeMatchOdds(
-                            entryByPlayerId.get(m.playerAId),
-                            entryByPlayerId.get(m.playerBId),
-                            drawRate
-                          )
-                        : null;
-                      return (
-                        <tr key={m.id} className="hover:bg-white/5">
-                          <td className="px-4 py-3 text-[var(--color-cream)]">{m.playerAName}</td>
-                          <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">
-                            {m.status === 'Completed' && m.playerAScore != null && m.playerBScore != null
-                              ? `${m.playerAScore} – ${m.playerBScore}`
-                              : '–'}
-                          </td>
-                          <td className="px-4 py-3 text-[var(--color-cream)]">{m.playerBName}</td>
-                          {list.some((x) => x.status === 'Pending') && (
-                            <td className="px-4 py-3 text-center text-[var(--color-cream-dim)] text-sm whitespace-nowrap">
-                              {odds ? (
-                                <span title="Player A win / Draw / Player B win (decimal odds)">
-                                  <span className="text-[var(--color-cream)]">{odds.oddsPlayerA.toFixed(2)}</span>
-                                  {' / '}
-                                  <span>{odds.oddsDraw.toFixed(2)}</span>
-                                  {' / '}
-                                  <span className="text-[var(--color-cream)]">{odds.oddsPlayerB.toFixed(2)}</span>
-                                </span>
-                              ) : (
-                                '–'
-                              )}
-                            </td>
-                          )}
-                          <td className="px-4 py-3">
-                            <span className={m.status === 'Completed' ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-muted)]'}>
-                              {m.status}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {matchesList.map((m) => (
+                      <tr key={m.id} className="hover:bg-white/5">
+                        <td className="px-4 py-3 text-[var(--color-cream)]">{m.playerAName}</td>
+                        <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">
+                          {m.status === 'Completed' && m.playerAScore != null && m.playerBScore != null
+                            ? `${m.playerAScore} – ${m.playerBScore}`
+                            : '–'}
+                        </td>
+                        <td className="px-4 py-3 text-[var(--color-cream)]">{m.playerBName}</td>
+                        <td className="px-4 py-3">
+                          <span className={m.status === 'Completed' ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-muted)]'}>
+                            {m.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>

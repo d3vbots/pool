@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
-import { matches, leaderboard } from '../api/client';
+import { matches } from '../api/client';
 import { getWeekDateRange } from '../lib/weekDateRange';
-import { computeMatchOdds, getLeagueDrawRate } from '../lib/odds';
-import type { MatchResponse, LeagueResponse, LeaderboardEntryResponse } from '../api/client';
+import type { MatchResponse, LeagueResponse } from '../api/client';
 
 export function LeagueResultsPage() {
   const { id } = useParams();
   const leagueId = Number(id);
   const [list, setList] = useState<MatchResponse[]>([]);
-  const [leaderboardList, setLeaderboardList] = useState<LeaderboardEntryResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -19,14 +17,8 @@ export function LeagueResultsPage() {
 
   const load = () => {
     if (!id) return;
-    Promise.all([
-      matches.listByLeague(leagueId),
-      leaderboard.get(leagueId).catch(() => [] as LeaderboardEntryResponse[]),
-    ])
-      .then(([matchList, lb]) => {
-        setList(matchList);
-        setLeaderboardList(lb);
-      })
+    matches.listByLeague(leagueId)
+      .then(setList)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   };
@@ -76,9 +68,6 @@ export function LeagueResultsPage() {
 
   const pendingByWeek = groupByWeekOrLeg(pending);
   const completedByWeek = groupByWeekOrLeg(completed);
-
-  const drawRate = getLeagueDrawRate(list);
-  const entryByPlayerId = new Map<number, LeaderboardEntryResponse>(leaderboardList.map((e) => [e.playerId, e]));
 
   const openEdit = (m: MatchResponse) => {
     setEditingId(m.id);
@@ -141,13 +130,7 @@ export function LeagueResultsPage() {
             <div key={key} className="card-felt overflow-hidden">
               <h4 className="px-3 sm:px-4 py-2 text-sm text-[var(--color-gold)] bg-[var(--color-surface-elevated)]">{label}</h4>
               <div className="divide-y divide-[var(--color-border)]">
-                {weekList.map((m) => {
-                  const odds = computeMatchOdds(
-                    entryByPlayerId.get(m.playerAId),
-                    entryByPlayerId.get(m.playerBId),
-                    drawRate
-                  );
-                  return (
+                {weekList.map((m) => (
                     <div key={m.id} className="px-3 sm:px-4 py-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4">
                       <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
                         <span className="text-white font-medium truncate">{m.playerAName}</span>
@@ -165,10 +148,7 @@ export function LeagueResultsPage() {
                           </>
                         )}
                       </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs text-[var(--color-cream-dim)]" title="Odds: Player A / Draw / Player B (based on league form)">
-                          {odds.oddsPlayerA.toFixed(2)} / {odds.oddsDraw.toFixed(2)} / {odds.oddsPlayerB.toFixed(2)}
-                        </span>
+                      <div className="flex flex-wrap gap-2">
                         {editingId === m.id ? (
                           <>
                             <button type="button" onClick={() => submitResult(m.id)} disabled={saving} className={`${touchBtn} btn-primary disabled:opacity-50`}>Save</button>
@@ -179,8 +159,7 @@ export function LeagueResultsPage() {
                         )}
                       </div>
                     </div>
-                  );
-                })}
+                ))}
               </div>
             </div>
           ))}
