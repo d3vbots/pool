@@ -2,6 +2,35 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+## Run locally
+
+### 1. Backend (API)
+
+- **.NET 8** and **PostgreSQL** (or a Supabase Postgres connection string) are required.
+- Copy the example config and set your database connection string:
+  ```bash
+  cp LeagueManagementApi/appsettings.Development.example.json LeagueManagementApi/appsettings.Development.json
+  ```
+  Edit `LeagueManagementApi/appsettings.Development.json` and set `ConnectionStrings:DefaultConnection` to your PostgreSQL connection string (e.g. from Supabase: Database → Connection string → URI).
+- Run the API from the repo root:
+  ```bash
+  cd LeagueManagementApi && dotnet run
+  ```
+  The API runs at **http://localhost:5000** (Swagger at http://localhost:5000/swagger).
+
+### 2. Frontend
+
+From the repo root:
+
+```bash
+npm install
+npm run dev
+```
+
+Vite will serve the app (e.g. http://localhost:5173) and proxy `/api` to the backend at http://localhost:5000. Log in with the admin credentials from `LeagueManagementApi/appsettings.Development.json` (default in example: `admin` / `your-secure-admin-password`, or `admin` / `admin` if using default `appsettings.json`).
+
+---
+
 ## Deployed frontend (Render, Netlify, etc.)
 
 If the frontend is deployed separately from the API, set **`VITE_API_URL`** in your deployment environment to the API origin (no trailing slash), e.g. `https://pool-8w66.onrender.com`. The app will then call that API instead of relative `/api` (or localhost). Re-deploy after changing this so the build picks it up.

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { players } from '../api/client';
 import { useAuthStore, selectIsAuthenticated } from '../store/authStore';
+import { formatMatchScoreDisplay, isMatchRecorded } from '../lib/matchDisplay';
 import type {
   PlayerResponse,
   PlayerLeagueEntryResponse,
@@ -75,7 +76,7 @@ export function PlayerDetailPage() {
       return Object.entries(byWeek)
         .sort(([a], [b]) => Number(a) - Number(b))
         .map(([week, weekMatches]) => {
-          const completed = weekMatches.filter((m) => m.status === 'Completed').length;
+          const completed = weekMatches.filter((m) => isMatchRecorded(m)).length;
           const weekNum = Number(week);
           const label = weekNum === 0 ? 'Unassigned' : `Week ${weekNum}`;
           return {
@@ -93,7 +94,7 @@ export function PlayerDetailPage() {
     return Object.entries(byLeg)
       .sort(([a], [b]) => Number(a) - Number(b))
       .map(([leg, legMatches]) => {
-        const completed = legMatches.filter((m) => m.status === 'Completed').length;
+        const completed = legMatches.filter((m) => isMatchRecorded(m)).length;
         return {
           key: `leg-${leg}`,
           label: `Leg ${leg} — ${completed}/${legMatches.length} completed`,
@@ -199,12 +200,18 @@ export function PlayerDetailPage() {
                                     {m.playerAName} vs {m.playerBName}
                                   </td>
                                   <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">
-                                    {m.status === 'Completed' && m.playerAScore != null && m.playerBScore != null
-                                      ? `${m.playerAScore} – ${m.playerBScore}`
-                                      : '–'}
+                                    {formatMatchScoreDisplay(m)}
                                   </td>
                                   <td className="px-4 py-3">
-                                    <span className={m.status === 'Completed' ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-muted)]'}>
+                                    <span
+                                      className={
+                                        m.status === 'Completed'
+                                          ? 'text-[var(--color-accent-green)]'
+                                          : m.status === 'Abandoned'
+                                            ? 'text-[var(--color-gold)]'
+                                            : 'text-[var(--color-muted)]'
+                                      }
+                                    >
                                       {m.status}
                                     </span>
                                   </td>

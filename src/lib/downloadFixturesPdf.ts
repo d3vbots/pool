@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { MatchResponse } from '../api/client';
+import { formatMatchScoreDisplay } from './matchDisplay';
 import { getWeekDateRange } from './weekDateRange';
 
 export type FixturesPdfOptions = {
@@ -69,9 +70,7 @@ export function downloadFixturesPdf({ leagueName, matches, startDate, endDate }:
     const head = [['Player A', 'Score', 'Player B', 'Status']];
     const body = list.map((m) => [
       m.playerAName,
-      m.status === 'Completed' && m.playerAScore != null && m.playerBScore != null
-        ? `${m.playerAScore} – ${m.playerBScore}`
-        : '–',
+      formatMatchScoreDisplay(m),
       m.playerBName,
       m.status,
     ]);

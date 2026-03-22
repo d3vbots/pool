@@ -5,6 +5,7 @@ import { HeroPool } from '../components/HeroPool';
 import { POOL_IMAGES } from '../lib/poolImages';
 import { downloadFixturesPdf } from '../lib/downloadFixturesPdf';
 import { getWeekDateRange } from '../lib/weekDateRange';
+import { formatMatchScoreDisplay } from '../lib/matchDisplay';
 import { computeMatchOdds, getLeagueDrawRate } from '../lib/odds';
 import type { LeagueResponse, LeaderboardEntryResponse, MatchResponse } from '../api/client';
 
@@ -79,9 +80,7 @@ function FixturesAndResultsPublic({
                           <Link to={`/player/${m.playerBId}`} className="hover:text-[var(--color-gold)] transition underline underline-offset-2">{m.playerBName}</Link>
                         </td>
                         <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">
-                          {m.status === 'Completed' && m.playerAScore != null && m.playerBScore != null
-                            ? `${m.playerAScore} – ${m.playerBScore}`
-                            : '–'}
+                          {formatMatchScoreDisplay(m)}
                         </td>
                         {showOdds && (
                           <td className="px-4 py-3 text-center text-[var(--color-cream-dim)] text-sm whitespace-nowrap" title="Player A win / Draw / Player B win (based on league form)">
@@ -99,7 +98,15 @@ function FixturesAndResultsPublic({
                           </td>
                         )}
                         <td className="px-4 py-3">
-                          <span className={m.status === 'Completed' ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-muted)]'}>
+                          <span
+                            className={
+                              m.status === 'Completed'
+                                ? 'text-[var(--color-accent-green)]'
+                                : m.status === 'Abandoned'
+                                  ? 'text-[var(--color-gold)]'
+                                  : 'text-[var(--color-muted)]'
+                            }
+                          >
                             {m.status}
                           </span>
                         </td>

@@ -38,4 +38,14 @@ public class MatchesController : ControllerBase
         if (!ok) return BadRequest(error);
         return NoContent();
     }
+
+    /// <summary>Mark match as abandoned (neither played by cutoff): both get a loss and forfeit games per league format.</summary>
+    [HttpPut("{id:int}/abandon")]
+    [Authorize]
+    public async Task<ActionResult> AbandonMatch(int id, CancellationToken ct)
+    {
+        var (ok, error) = await _matchService.SetAbandonedAsync(id, ct);
+        if (!ok) return BadRequest(error);
+        return NoContent();
+    }
 }

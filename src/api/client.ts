@@ -96,6 +96,8 @@ export const matches = {
   setResult: (matchId: number, playerAScore: number, playerBScore: number) =>
     api<void>(`/matches/${matchId}/result`, { method: 'PUT', body: JSON.stringify({ playerAScore, playerBScore }) }),
   deleteResult: (matchId: number) => api<void>(`/matches/${matchId}/result`, { method: 'DELETE' }),
+  /** Both players forfeit (no-show): each gets a loss, loss points, and games lost = league best-of. */
+  abandon: (matchId: number) => api<void>(`/matches/${matchId}/abandon`, { method: 'PUT' }),
 };
 
 export const leaderboard = {
@@ -204,6 +206,8 @@ export interface MatchResponse {
   status: string;
   playerAScore?: number;
   playerBScore?: number;
+  /** When status is Abandoned: games lost per player (league match format). */
+  abandonedForfeitGames?: number | null;
 }
 
 export interface LeaderboardEntryResponse {

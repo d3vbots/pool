@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import { matches } from '../api/client';
 import { downloadFixturesPdf } from '../lib/downloadFixturesPdf';
+import { formatMatchScoreDisplay } from '../lib/matchDisplay';
 import { getWeekDateRange } from '../lib/weekDateRange';
 import type { MatchResponse, LeagueResponse } from '../api/client';
 
@@ -119,13 +120,19 @@ export function LeagueFixturesPage() {
                       <tr key={m.id} className="hover:bg-white/5">
                         <td className="px-4 py-3 text-[var(--color-cream)]">{m.playerAName}</td>
                         <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">
-                          {m.status === 'Completed' && m.playerAScore != null && m.playerBScore != null
-                            ? `${m.playerAScore} – ${m.playerBScore}`
-                            : '–'}
+                          {formatMatchScoreDisplay(m)}
                         </td>
                         <td className="px-4 py-3 text-[var(--color-cream)]">{m.playerBName}</td>
                         <td className="px-4 py-3">
-                          <span className={m.status === 'Completed' ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-muted)]'}>
+                          <span
+                            className={
+                              m.status === 'Completed'
+                                ? 'text-[var(--color-accent-green)]'
+                                : m.status === 'Abandoned'
+                                  ? 'text-[var(--color-gold)]'
+                                  : 'text-[var(--color-muted)]'
+                            }
+                          >
                             {m.status}
                           </span>
                         </td>

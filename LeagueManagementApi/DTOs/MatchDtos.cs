@@ -16,6 +16,8 @@ public class MatchResponse
     public string Status { get; set; } = string.Empty;
     public int? PlayerAScore { get; set; }
     public int? PlayerBScore { get; set; }
+    /// <summary>When Status is Abandoned: games lost recorded per player (league MatchFormatBestOf).</summary>
+    public int? AbandonedForfeitGames { get; set; }
 }
 
 public class SetMatchResultRequest

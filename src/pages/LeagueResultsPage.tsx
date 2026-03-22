@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import { matches } from '../api/client';
 import { getWeekDateRange } from '../lib/weekDateRange';
+import { formatMatchScoreDisplay } from '../lib/matchDisplay';
 import type { MatchResponse, LeagueResponse } from '../api/client';
 
 export function LeagueResultsPage() {
@@ -29,7 +30,7 @@ export function LeagueResultsPage() {
 
   const { league } = (useOutletContext() as { league?: LeagueResponse | null }) ?? {};
   const pending = list.filter((m) => m.status === 'Pending');
-  const completed = list.filter((m) => m.status === 'Completed');
+  const recorded = list.filter((m) => m.status === 'Completed' || m.status === 'Abandoned');
 
   const useWeeks = list.some((m) => m.weekNumber != null);
 
@@ -67,7 +68,28 @@ export function LeagueResultsPage() {
   }
 
   const pendingByWeek = groupByWeekOrLeg(pending);
-  const completedByWeek = groupByWeekOrLeg(completed);
+  const recordedByWeek = groupByWeekOrLeg(recorded);
+
+  const forfeitGames = league?.matchFormatBestOf ?? 4;
+  const abandonConfirm = (hasExistingResult: boolean) =>
+    hasExistingResult
+      ? `Replace this result with a match abandonment?\n\nThe current result will be reverted, then BOTH players get a loss, ${forfeitGames} games lost each (0–${forfeitGames}), and loss points.`
+      : `Mark this match as abandoned (neither player played by the deadline)?\n\nBOTH players get a loss, ${forfeitGames} games lost each (0–${forfeitGames}), and loss points.`;
+
+  const abandonMatch = async (matchId: number, hasExistingResult: boolean) => {
+    if (!confirm(abandonConfirm(hasExistingResult))) return;
+    setSaving(true);
+    setError('');
+    try {
+      await matches.abandon(matchId);
+      closeEdit();
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to mark abandoned');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const openEdit = (m: MatchResponse) => {
     setEditingId(m.id);
@@ -116,6 +138,8 @@ export function LeagueResultsPage() {
   }
 
   const touchBtn = 'min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg px-4 py-2.5 text-base font-medium';
+  const touchAbandon =
+    'min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg px-4 py-2.5 text-base font-medium border border-[var(--color-gold)]/60 text-[var(--color-gold)] hover:bg-[var(--color-gold)]/10 disabled:opacity-50';
   const touchInput = 'w-14 h-11 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/80 px-2 text-center text-[var(--color-cream)] text-lg focus:border-[var(--color-gold)] focus:outline-none';
 
   return (
@@ -153,9 +177,13 @@ export function LeagueResultsPage() {
                           <>
                             <button type="button" onClick={() => submitResult(m.id)} disabled={saving} className={`${touchBtn} btn-primary disabled:opacity-50`}>Save</button>
                             <button type="button" onClick={closeEdit} className={`${touchBtn} border border-[var(--color-border)] text-gray-400 hover:text-white`}>Cancel</button>
+                            <button type="button" onClick={() => abandonMatch(m.id, false)} disabled={saving} className={touchAbandon}>Match abandoned</button>
                           </>
                         ) : (
-                          <button type="button" onClick={() => openEdit(m)} className={`${touchBtn} border border-[var(--color-accent-green)] text-[var(--color-accent-green)] hover:bg-[var(--color-accent-green)] hover:text-[var(--color-surface)]`}>Enter result</button>
+                          <>
+                            <button type="button" onClick={() => openEdit(m)} className={`${touchBtn} border border-[var(--color-accent-green)] text-[var(--color-accent-green)] hover:bg-[var(--color-accent-green)] hover:text-[var(--color-surface)]`}>Enter result</button>
+                            <button type="button" onClick={() => abandonMatch(m.id, false)} disabled={saving} className={touchAbandon}>Match abandoned</button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -166,10 +194,10 @@ export function LeagueResultsPage() {
         </div>
       )}
 
-      {completedByWeek.length > 0 && (
+      {recordedByWeek.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-sm font-medium text-[var(--color-muted)]">Completed</h3>
-          {completedByWeek.map(({ key, label, list: weekList }) => (
+          <h3 className="text-sm font-medium text-[var(--color-muted)]">Recorded (completed or abandoned)</h3>
+          {recordedByWeek.map(({ key, label, list: weekList }) => (
             <div key={key} className="card-felt overflow-hidden">
               <h4 className="px-3 sm:px-4 py-2 text-sm text-[var(--color-gold)] bg-[var(--color-surface-elevated)]">{label}</h4>
               <div className="divide-y divide-[var(--color-border)]">
@@ -186,7 +214,15 @@ export function LeagueResultsPage() {
                         </>
                       ) : (
                         <>
-                          <span className="text-[var(--color-accent-green)] font-medium">{m.playerAScore} – {m.playerBScore}</span>
+                          <span
+                            className={
+                              m.status === 'Abandoned'
+                                ? 'text-[var(--color-gold)] font-medium'
+                                : 'text-[var(--color-accent-green)] font-medium'
+                            }
+                          >
+                            {formatMatchScoreDisplay(m)}
+                          </span>
                           <span className="text-white font-medium truncate">{m.playerBName}</span>
                         </>
                       )}
@@ -196,11 +232,15 @@ export function LeagueResultsPage() {
                         <>
                           <button type="button" onClick={() => submitResult(m.id)} disabled={saving} className={`${touchBtn} btn-primary disabled:opacity-50`}>Update</button>
                           <button type="button" onClick={closeEdit} className={`${touchBtn} border border-[var(--color-border)] text-gray-400 hover:text-white`}>Cancel</button>
+                          <button type="button" onClick={() => abandonMatch(m.id, true)} disabled={saving} className={touchAbandon}>Match abandoned</button>
                         </>
                       ) : (
                         <>
                           <button type="button" onClick={() => openEdit(m)} className={`${touchBtn} border border-[var(--color-border)] text-gray-400 hover:text-white`}>Edit</button>
                           <button type="button" onClick={() => deleteResult(m.id)} className={`${touchBtn} text-[var(--color-accent-red)] hover:bg-[var(--color-accent-red)]/10`}>Delete</button>
+                          {m.status !== 'Abandoned' && (
+                            <button type="button" onClick={() => abandonMatch(m.id, true)} disabled={saving} className={touchAbandon}>Match abandoned</button>
+                          )}
                         </>
                       )}
                     </div>
