@@ -94,8 +94,15 @@ public class LeagueService : ILeagueService
     {
         var league = await _db.Leagues.FindAsync(new object[] { id }, ct);
         if (league == null || league.IsDeleted) return null;
+
         if (league.FixturesGenerated)
-            return null; // cannot edit after fixtures generated
+        {
+            league.Name = req.Name;
+            league.Description = req.Description;
+            await _db.SaveChangesAsync(ct);
+            return await GetByIdAsync(id, ct: ct);
+        }
+
         if (req.StartDate >= req.EndDate || req.MaxPlayers < req.MinPlayers)
             return null;
 
@@ -112,8 +119,7 @@ public class LeagueService : ILeagueService
         league.DrawPoints = req.DrawPoints;
         league.LossPoints = req.LossPoints;
         await _db.SaveChangesAsync(ct);
-        await _db.Entry(league).ReloadAsync(ct);
-        return MapToResponse(league);
+        return await GetByIdAsync(id, ct: ct);
     }
 
     public async Task<bool> SoftDeleteAsync(int id, CancellationToken ct = default)

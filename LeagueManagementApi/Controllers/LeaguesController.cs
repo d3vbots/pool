@@ -47,7 +47,7 @@ public class LeaguesController : ControllerBase
         if (string.IsNullOrWhiteSpace(req.Name))
             return BadRequest("Name is required.");
         var league = await _leagueService.UpdateAsync(id, req, ct);
-        if (league == null) return BadRequest("League not found, or fixtures already generated, or invalid data.");
+        if (league == null) return BadRequest("League not found or invalid data.");
         return Ok(league);
     }
 

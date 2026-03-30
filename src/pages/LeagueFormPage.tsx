@@ -102,7 +102,6 @@ export function LeagueFormPage() {
               onChange={(e) => update({ name: e.target.value })}
               className="w-full min-h-[48px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none"
               required
-              readOnly={!canEditSettings}
             />
           </div>
           <div className="sm:col-span-2">
@@ -112,7 +111,6 @@ export function LeagueFormPage() {
               onChange={(e) => update({ description: e.target.value })}
               className="w-full min-h-[44px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none resize-none"
               rows={2}
-              readOnly={!canEditSettings}
             />
           </div>
           <div>
@@ -249,7 +247,9 @@ export function LeagueFormPage() {
           )}
         </div>
         {!canEditSettings && (
-          <p className="text-sm text-gray-500">League settings are locked after fixtures are generated.</p>
+          <p className="text-sm text-[var(--color-cream-dim)]">
+            Dates, player limits, and scoring are locked after fixtures are generated. You can still change the league name and description above.
+          </p>
         )}
         <div className="flex gap-3">
           <button

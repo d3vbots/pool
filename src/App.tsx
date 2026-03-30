@@ -57,6 +57,14 @@ function App() {
             }
           />
           <Route
+            path="leagues/:id/edit"
+            element={
+              <ProtectedRoute>
+                <LeagueFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="leagues/:id"
             element={
               <ProtectedRoute>

@@ -121,7 +121,15 @@ export function LeagueDetailPage() {
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
         <Link to="/leagues" className="min-h-[44px] flex items-center text-[var(--color-cream-dim)] hover:text-[var(--color-gold)] transition w-fit">← Leagues</Link>
-        <h1 className="font-display text-xl sm:text-2xl text-[var(--color-cream)] break-words tracking-wide">{league.name}</h1>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 flex-1 min-w-0">
+          <h1 className="font-display text-xl sm:text-2xl text-[var(--color-cream)] break-words tracking-wide">{league.name}</h1>
+          <Link
+            to={`/leagues/${id}/edit`}
+            className="min-h-[44px] shrink-0 inline-flex items-center justify-center px-4 py-2.5 rounded-lg border border-[var(--color-border)] text-[var(--color-cream-dim)] hover:text-[var(--color-gold)] hover:bg-white/5 transition text-sm font-medium w-fit"
+          >
+            Edit league
+          </Link>
+        </div>
         <span className="rounded bg-[var(--color-felt)] px-2 py-1 text-sm text-[var(--color-gold)] w-fit">{league.status}</span>
         {canOpenRegistration && (
           <button
