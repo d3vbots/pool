@@ -35,18 +35,18 @@ export function Layout() {
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-surface)]">
       <header className="app-header border-b sticky top-0 z-20">
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3.5 sm:py-4 flex items-center justify-between gap-3">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-1 sm:py-1.5 flex items-center justify-between gap-2">
           <Link
             to="/"
-            className="shrink-0 min-h-[44px] flex items-center gap-3 sm:gap-4 group"
+            className="shrink-0 flex items-center gap-2 sm:gap-3 min-w-0 group"
             onClick={closeMenu}
           >
             <img
               src={LOGO_PATH}
               alt=""
-              className="h-14 sm:h-[4.5rem] w-auto max-w-[min(70vw,300px)] sm:max-w-[340px] object-contain object-left shrink-0 drop-shadow-[0_2px_8px_rgba(7,16,12,0.12)]"
+              className="h-[4.25rem] sm:h-20 w-auto max-w-[min(78vw,360px)] sm:max-w-[420px] object-contain object-left shrink-0 drop-shadow-[0_2px_8px_rgba(7,16,12,0.12)]"
             />
-            <span className="font-display text-2xl sm:text-3xl tracking-wide text-[var(--color-surface)] group-hover:text-[var(--color-felt)] transition">
+            <span className="font-display text-lg sm:text-xl leading-tight tracking-wide text-[var(--color-surface)] group-hover:text-[var(--color-felt)] transition">
               Pool League
             </span>
           </Link>
