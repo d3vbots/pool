@@ -38,14 +38,12 @@ export function LoginPage() {
       <div className="relative w-full max-w-sm">
         <div className="card-felt p-6 sm:p-8 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[var(--color-gold)] to-transparent opacity-70" />
-          <div className="flex flex-col items-center gap-3 mb-6">
-            <div className="brand-logo-frame brand-logo-frame--hero">
-              <img
-                src={LOGO_PATH}
-                alt="Ku Nandziha Pool and Snack Bar"
-                className="h-[4.75rem] sm:h-28 w-auto max-w-[min(100%,300px)] object-contain"
-              />
-            </div>
+          <div className="flex flex-col items-center gap-3 mb-6 pb-6 border-b border-[var(--color-border)]/70">
+            <img
+              src={LOGO_PATH}
+              alt="Ku Nandziha Pool and Snack Bar"
+              className="h-[5.5rem] sm:h-32 w-auto max-w-[min(100%,280px)] object-contain object-center"
+            />
             <span className="font-display text-2xl sm:text-3xl text-[var(--color-cream)] tracking-wide">
               Pool League
             </span>
