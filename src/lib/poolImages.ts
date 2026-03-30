@@ -3,4 +3,4 @@ export const POOL_IMAGES = {
   hero: '/pool.jpeg',
 } as const;
 
-export const LOGO_PATH = '/Imbizo-Shisanyama-Logo.png';
+export const LOGO_PATH = '/newlogo.png';
