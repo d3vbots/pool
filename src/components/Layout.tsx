@@ -39,7 +39,13 @@ export function Layout() {
             className="shrink-0 min-h-[44px] flex items-center gap-3 group"
             onClick={closeMenu}
           >
-            <img src={LOGO_PATH} alt="" className="h-9 w-auto max-w-[120px] object-contain" />
+            <div className="brand-logo-frame shrink-0">
+              <img
+                src={LOGO_PATH}
+                alt=""
+                className="h-11 sm:h-[3.25rem] w-auto max-w-[200px] sm:max-w-[240px] object-contain"
+              />
+            </div>
             <span className="font-display text-xl sm:text-2xl tracking-wide text-[var(--color-cream)] group-hover:text-[var(--color-gold)] transition">
               Pool League
             </span>
