@@ -232,16 +232,16 @@ public class MatchService : IMatchService
         lpA.GamesWon -= sa;
         lpA.GamesLost -= sb;
         lpA.Points -= pointsA;
-        if (pointsA > match.League.LossPoints) lpA.Wins--;
-        else if (pointsB > match.League.LossPoints) lpA.Losses--;
+        if (sa > sb) lpA.Wins--;
+        else if (sb > sa) lpA.Losses--;
         else lpA.Draws--;
 
         lpB.Played--;
         lpB.GamesWon -= sb;
         lpB.GamesLost -= sa;
         lpB.Points -= pointsB;
-        if (pointsB > match.League.LossPoints) lpB.Wins--;
-        else if (pointsA > match.League.LossPoints) lpB.Losses--;
+        if (sb > sa) lpB.Wins--;
+        else if (sa > sb) lpB.Losses--;
         else lpB.Draws--;
     }
 
