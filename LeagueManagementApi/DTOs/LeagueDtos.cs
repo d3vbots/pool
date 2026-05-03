@@ -14,6 +14,8 @@ public class CreateLeagueRequest
     public int WinPoints { get; set; } = 3;
     public int DrawPoints { get; set; } = 1;
     public int LossPoints { get; set; } = 0;
+    /// <summary>Bonus points if a player scores at least one apple in a match (max one such bonus per player per match).</summary>
+    public int AppleBonusPoints { get; set; } = 1;
 }
 
 public class UpdateLeagueRequest : CreateLeagueRequest { }
@@ -33,6 +35,7 @@ public class LeagueResponse
     public int WinPoints { get; set; }
     public int DrawPoints { get; set; }
     public int LossPoints { get; set; }
+    public int AppleBonusPoints { get; set; }
     public string Status { get; set; } = string.Empty;
     public bool FixturesGenerated { get; set; }
     public int PlayerCount { get; set; }

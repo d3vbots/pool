@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import { matches } from '../api/client';
 import { getWeekDateRange } from '../lib/weekDateRange';
+import { PlayerAppleBadge } from '../components/PlayerAppleBadge';
 import { formatMatchScoreDisplay } from '../lib/matchDisplay';
 import type { MatchResponse, LeagueResponse } from '../api/client';
 
@@ -14,6 +15,8 @@ export function LeagueResultsPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
+  const [applesA, setApplesA] = useState(0);
+  const [applesB, setApplesB] = useState(0);
   const [saving, setSaving] = useState(false);
 
   const load = () => {
@@ -95,19 +98,26 @@ export function LeagueResultsPage() {
     setEditingId(m.id);
     setScoreA(m.playerAScore ?? 0);
     setScoreB(m.playerBScore ?? 0);
+    setApplesA(m.playerAApples ?? 0);
+    setApplesB(m.playerBApples ?? 0);
   };
 
   const closeEdit = () => {
     setEditingId(null);
     setScoreA(0);
     setScoreB(0);
+    setApplesA(0);
+    setApplesB(0);
   };
 
   const submitResult = async (matchId: number) => {
     setSaving(true);
     setError('');
     try {
-      await matches.setResult(matchId, scoreA, scoreB);
+      await matches.setResult(matchId, scoreA, scoreB, {
+        playerAApples: applesA,
+        playerBApples: applesB,
+      });
       closeEdit();
       load();
     } catch (e) {
@@ -141,10 +151,15 @@ export function LeagueResultsPage() {
   const touchAbandon =
     'min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg px-4 py-2.5 text-base font-medium border border-[var(--color-gold)]/60 text-[var(--color-gold)] hover:bg-[var(--color-gold)]/10 disabled:opacity-50';
   const touchInput = 'w-14 h-11 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/80 px-2 text-center text-[var(--color-cream)] text-lg focus:border-[var(--color-gold)] focus:outline-none';
+  const appleBonus = league?.appleBonusPoints ?? 1;
 
   return (
     <div className="space-y-4 sm:space-y-6">
       <h2 className="font-display text-xl sm:text-2xl text-[var(--color-cream)] tracking-wide">Enter results</h2>
+      <p className="text-sm text-[var(--color-cream-dim)] max-w-2xl">
+        <span className="text-[var(--color-gold)]">Green apple</span> = break-and-finish on a frame. Enter how many each player scored (cannot exceed games won).
+        Each apple counts toward their season 🍏 total; league points only add up to {appleBonus} bonus point{appleBonus === 1 ? '' : 's'} per player per match if they have at least one apple.
+      </p>
       {error && <p className="text-sm text-[var(--color-accent-red)]">{error}</p>}
 
       {pendingByWeek.length > 0 && (
@@ -156,14 +171,28 @@ export function LeagueResultsPage() {
               <div className="divide-y divide-[var(--color-border)]">
                 {weekList.map((m) => (
                     <div key={m.id} className="px-3 sm:px-4 py-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4">
-                      <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-                        <span className="text-white font-medium truncate">{m.playerAName}</span>
+                      <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                        <span className="flex items-center gap-2 min-w-0">
+                          <span className="text-white font-medium truncate">{m.playerAName}</span>
+                          {editingId === m.id && <PlayerAppleBadge count={applesA} />}
+                        </span>
                         {editingId === m.id ? (
                           <>
                             <input type="number" min={0} max={9} value={scoreA} onChange={(e) => setScoreA(parseInt(e.target.value, 10) || 0)} className={touchInput} />
                             <span className="text-gray-500">–</span>
                             <input type="number" min={0} max={9} value={scoreB} onChange={(e) => setScoreB(parseInt(e.target.value, 10) || 0)} className={touchInput} />
-                            <span className="text-white font-medium truncate">{m.playerBName}</span>
+                            <span className="flex items-center gap-2 min-w-0">
+                              <span className="text-white font-medium truncate">{m.playerBName}</span>
+                              <PlayerAppleBadge count={applesB} />
+                            </span>
+                            <span className="w-full basis-full sm:basis-auto flex flex-wrap items-center gap-2 text-sm text-[var(--color-cream-dim)] sm:mt-0 border-t border-[var(--color-border)]/60 pt-2 sm:border-0 sm:pt-0">
+                              <span title="Green apples (break-and-finish)">Edit 🍏</span>
+                              <label className="sr-only">{m.playerAName} apples</label>
+                              <input type="number" min={0} max={9} value={applesA} onChange={(e) => setApplesA(parseInt(e.target.value, 10) || 0)} className={`${touchInput} w-12 h-9 text-base`} aria-label={`${m.playerAName} apples`} />
+                              <span>–</span>
+                              <label className="sr-only">{m.playerBName} apples</label>
+                              <input type="number" min={0} max={9} value={applesB} onChange={(e) => setApplesB(parseInt(e.target.value, 10) || 0)} className={`${touchInput} w-12 h-9 text-base`} aria-label={`${m.playerBName} apples`} />
+                            </span>
                           </>
                         ) : (
                           <>
@@ -203,27 +232,44 @@ export function LeagueResultsPage() {
               <div className="divide-y divide-[var(--color-border)]">
                 {weekList.map((m) => (
                   <div key={m.id} className="px-3 sm:px-4 py-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4">
-                    <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-                      <span className="text-white font-medium truncate">{m.playerAName}</span>
+                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                      <span className="flex items-center gap-2 min-w-0">
+                        <span className="text-white font-medium truncate">{m.playerAName}</span>
+                        {editingId === m.id ? <PlayerAppleBadge count={applesA} /> : m.status === 'Completed' ? <PlayerAppleBadge count={m.playerAApples ?? 0} /> : null}
+                      </span>
                       {editingId === m.id ? (
                         <>
                           <input type="number" min={0} max={9} value={scoreA} onChange={(e) => setScoreA(parseInt(e.target.value, 10) || 0)} className={touchInput} />
                           <span className="text-gray-500">–</span>
                           <input type="number" min={0} max={9} value={scoreB} onChange={(e) => setScoreB(parseInt(e.target.value, 10) || 0)} className={touchInput} />
-                          <span className="text-white font-medium truncate">{m.playerBName}</span>
+                          <span className="flex items-center gap-2 min-w-0">
+                            <span className="text-white font-medium truncate">{m.playerBName}</span>
+                            <PlayerAppleBadge count={applesB} />
+                          </span>
+                          <span className="w-full basis-full sm:basis-auto flex flex-wrap items-center gap-2 text-sm text-[var(--color-cream-dim)] border-t border-[var(--color-border)]/60 pt-2 sm:border-0 sm:pt-0">
+                            <span title="Green apples (break-and-finish)">Edit 🍏</span>
+                            <label className="sr-only">{m.playerAName} apples</label>
+                            <input type="number" min={0} max={9} value={applesA} onChange={(e) => setApplesA(parseInt(e.target.value, 10) || 0)} className={`${touchInput} w-12 h-9 text-base`} aria-label={`${m.playerAName} apples`} />
+                            <span>–</span>
+                            <label className="sr-only">{m.playerBName} apples</label>
+                            <input type="number" min={0} max={9} value={applesB} onChange={(e) => setApplesB(parseInt(e.target.value, 10) || 0)} className={`${touchInput} w-12 h-9 text-base`} aria-label={`${m.playerBName} apples`} />
+                          </span>
                         </>
                       ) : (
                         <>
                           <span
                             className={
                               m.status === 'Abandoned'
-                                ? 'text-[var(--color-gold)] font-medium'
-                                : 'text-[var(--color-accent-green)] font-medium'
+                                ? 'text-[var(--color-gold)] font-medium whitespace-nowrap'
+                                : 'text-[var(--color-accent-green)] font-medium whitespace-nowrap'
                             }
                           >
-                            {formatMatchScoreDisplay(m)}
+                            {formatMatchScoreDisplay(m, { includeAppleNote: false })}
                           </span>
-                          <span className="text-white font-medium truncate">{m.playerBName}</span>
+                          <span className="flex items-center gap-2 min-w-0">
+                            <span className="text-white font-medium truncate">{m.playerBName}</span>
+                            {m.status === 'Completed' ? <PlayerAppleBadge count={m.playerBApples ?? 0} /> : null}
+                          </span>
                         </>
                       )}
                     </div>

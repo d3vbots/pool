@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { players } from '../api/client';
 import { useAuthStore, selectIsAuthenticated } from '../store/authStore';
+import { PlayerAppleBadge } from '../components/PlayerAppleBadge';
 import { formatMatchScoreDisplay, isMatchRecorded } from '../lib/matchDisplay';
 import type {
   PlayerResponse,
@@ -153,6 +154,7 @@ export function PlayerDetailPage() {
                 <div className="mt-2 flex flex-wrap gap-3 text-sm text-[var(--color-cream-dim)]">
                   <span>P{entry.played}</span>
                   <span>W{entry.wins} D{entry.draws} L{entry.losses}</span>
+                  <span title="Green apples (break-and-finish)">🍏 {entry.apples ?? 0}</span>
                   <span className={entry.goalDifference >= 0 ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-accent-red)]'}>
                     GD {entry.goalDifference >= 0 ? '+' : ''}{entry.goalDifference}
                   </span>
@@ -197,10 +199,20 @@ export function PlayerDetailPage() {
                               {weekList.map((m) => (
                                 <tr key={m.id} className="hover:bg-white/5">
                                   <td className="px-4 py-3 text-[var(--color-cream)]">
-                                    {m.playerAName} vs {m.playerBName}
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                                      <span className="inline-flex items-center gap-2 flex-wrap">
+                                        <span>{m.playerAName}</span>
+                                        {m.status === 'Completed' ? <PlayerAppleBadge count={m.playerAApples ?? 0} /> : null}
+                                      </span>
+                                      <span className="text-[var(--color-muted)] text-xs">vs</span>
+                                      <span className="inline-flex items-center gap-2 flex-wrap">
+                                        <span>{m.playerBName}</span>
+                                        {m.status === 'Completed' ? <PlayerAppleBadge count={m.playerBApples ?? 0} /> : null}
+                                      </span>
+                                    </div>
                                   </td>
-                                  <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">
-                                    {formatMatchScoreDisplay(m)}
+                                  <td className="px-4 py-3 text-center text-[var(--color-cream-dim)] whitespace-nowrap">
+                                    {formatMatchScoreDisplay(m, { includeAppleNote: m.status !== 'Completed' })}
                                   </td>
                                   <td className="px-4 py-3">
                                     <span

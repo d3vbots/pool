@@ -1,11 +1,19 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { leagues, leaderboard, matches } from '../api/client';
 import { HeroPool } from '../components/HeroPool';
+import { LeaderboardLegend } from '../components/LeaderboardLegend';
+import { LeaderboardTop8CutRow } from '../components/LeaderboardTop8CutRow';
+import { PlayerAppleBadge } from '../components/PlayerAppleBadge';
 import { POOL_IMAGES } from '../lib/poolImages';
 import { downloadFixturesPdf } from '../lib/downloadFixturesPdf';
 import { getWeekDateRange } from '../lib/weekDateRange';
 import { formatMatchScoreDisplay } from '../lib/matchDisplay';
+import {
+  leaderboardCardClass,
+  leaderboardTableRowClass,
+  shouldShowTop8CutLine,
+} from '../lib/standingsVisual';
 import { computeMatchOdds, getLeagueDrawRate } from '../lib/odds';
 import type { LeagueResponse, LeaderboardEntryResponse, MatchResponse } from '../api/client';
 
@@ -75,12 +83,20 @@ function FixturesAndResultsPublic({
                     return (
                       <tr key={m.id} className="hover:bg-white/5">
                         <td className="px-4 py-3 text-[var(--color-cream)]">
-                          <Link to={`/player/${m.playerAId}`} className="hover:text-[var(--color-gold)] transition underline underline-offset-2">{m.playerAName}</Link>
-                          {' vs '}
-                          <Link to={`/player/${m.playerBId}`} className="hover:text-[var(--color-gold)] transition underline underline-offset-2">{m.playerBName}</Link>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                            <span className="inline-flex items-center gap-2 min-w-0 flex-wrap">
+                              <Link to={`/player/${m.playerAId}`} className="hover:text-[var(--color-gold)] transition underline underline-offset-2 shrink-0">{m.playerAName}</Link>
+                              {m.status === 'Completed' ? <PlayerAppleBadge count={m.playerAApples ?? 0} /> : null}
+                            </span>
+                            <span className="text-[var(--color-muted)] text-xs shrink-0">vs</span>
+                            <span className="inline-flex items-center gap-2 min-w-0 flex-wrap">
+                              <Link to={`/player/${m.playerBId}`} className="hover:text-[var(--color-gold)] transition underline underline-offset-2 shrink-0">{m.playerBName}</Link>
+                              {m.status === 'Completed' ? <PlayerAppleBadge count={m.playerBApples ?? 0} /> : null}
+                            </span>
+                          </div>
                         </td>
-                        <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">
-                          {formatMatchScoreDisplay(m)}
+                        <td className="px-4 py-3 text-center text-[var(--color-cream-dim)] whitespace-nowrap">
+                          {formatMatchScoreDisplay(m, { includeAppleNote: m.status !== 'Completed' })}
                         </td>
                         {showOdds && (
                           <td className="px-4 py-3 text-center text-[var(--color-cream-dim)] text-sm whitespace-nowrap" title="Player A win / Draw / Player B win (based on league form)">
@@ -240,6 +256,8 @@ function LeagueStandingsView({ leagueId }: { leagueId: number }) {
     );
   }
 
+  const standingTotal = entries.length;
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-wrap items-center gap-3">
@@ -248,35 +266,53 @@ function LeagueStandingsView({ leagueId }: { leagueId: number }) {
       </div>
       {/* Mobile: cards */}
       <div className="sm:hidden space-y-2">
-        {entries.map((entry, i) => (
-          <div
-            key={entry.playerId}
-            className={`card-felt p-4 ${i === 0 ? 'ring-1 ring-[var(--color-gold)]/40' : ''}`}
-          >
-                <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="text-lg font-bold text-[var(--color-gold)] shrink-0 w-7">{entry.rank}</span>
-                <Link to={`/player/${entry.playerId}`} className="font-medium text-[var(--color-cream)] truncate hover:text-[var(--color-gold)] transition underline underline-offset-2">
-                  {entry.playerName}
-                </Link>
+        {entries.map((entry) => (
+          <Fragment key={entry.playerId}>
+            {shouldShowTop8CutLine(entry.rank, standingTotal) && (
+              <div
+                role="separator"
+                className="mx-1 border-t border-dashed border-[var(--color-gold)]/65"
+                aria-label="Cut after top eight"
+              />
+            )}
+            <div className={leaderboardCardClass(entry.rank, standingTotal)}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span
+                    className={`text-lg font-bold shrink-0 w-8 tabular-nums ${entry.rank === 1 ? 'text-[var(--color-gold)]' : 'text-[var(--color-gold)]/90'}`}
+                    title={entry.rank === 1 ? 'Table leader' : undefined}
+                  >
+                    {entry.rank === 1 ? '👑 ' : ''}
+                    {entry.rank}
+                  </span>
+                  <Link to={`/player/${entry.playerId}`} className="font-medium text-[var(--color-cream)] truncate hover:text-[var(--color-gold)] transition underline underline-offset-2">
+                    {entry.playerName}
+                  </Link>
+                </div>
+                <span className="text-xl font-bold text-[var(--color-accent-green)] shrink-0">{entry.points} pts</span>
               </div>
-              <span className="text-xl font-bold text-[var(--color-accent-green)] shrink-0">{entry.points} pts</span>
+              <div className="flex flex-wrap gap-3 mt-2 text-sm text-[var(--color-cream-dim)]">
+                <span>P{entry.played}</span>
+                <span>W{entry.wins} D{entry.draws} L{entry.losses}</span>
+                <span title="Green apples (break-and-finish)">🍏 {entry.apples ?? 0}</span>
+                <span className={entry.goalDifference >= 0 ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-accent-red)]'}>
+                  GD {entry.goalDifference >= 0 ? '+' : ''}{entry.goalDifference}
+                </span>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-2 text-sm text-[var(--color-cream-dim)]">
-              <span>P{entry.played}</span>
-              <span>W{entry.wins} D{entry.draws} L{entry.losses}</span>
-              <span className={entry.goalDifference >= 0 ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-accent-red)]'}>
-                GD {entry.goalDifference >= 0 ? '+' : ''}{entry.goalDifference}
-              </span>
-            </div>
-          </div>
+          </Fragment>
         ))}
+        {standingTotal > 0 && (
+          <div className="mt-3 px-1 py-2 rounded-lg bg-black/15 border border-[var(--color-border)]/50">
+            <LeaderboardLegend totalPlayers={standingTotal} />
+          </div>
+        )}
       </div>
       {/* Desktop: table */}
-      <div className="hidden sm:block card-felt overflow-hidden">
+      <div className="hidden sm:block card-felt overflow-hidden ring-1 ring-[var(--color-border)]/80">
         <div className="table-scroll">
-          <table className="w-full text-left min-w-[500px]">
-            <thead className="bg-[var(--color-surface-elevated)] text-[var(--color-muted)] text-sm">
+          <table className="w-full text-left min-w-[500px] border-collapse">
+            <thead className="bg-[var(--color-surface-elevated)] text-[var(--color-muted)] text-sm border-b border-[var(--color-border)]">
               <tr>
                 <th className="px-4 py-3">Rank</th>
                 <th className="px-4 py-3">Player</th>
@@ -287,13 +323,21 @@ function LeagueStandingsView({ leagueId }: { leagueId: number }) {
                 <th className="px-4 py-3 text-center">GW</th>
                 <th className="px-4 py-3 text-center">GL</th>
                 <th className="px-4 py-3 text-center">GD</th>
+                <th className="px-4 py-3 text-center" title="Green apples (break-and-finish)">🍏</th>
                 <th className="px-4 py-3 text-right">Pts</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--color-border)]">
-              {entries.map((entry, i) => (
-                <tr key={entry.playerId} className={`hover:bg-white/5 ${i === 0 ? 'bg-[var(--color-felt)]/30' : ''}`}>
-                  <td className="px-4 py-3 font-semibold text-[var(--color-gold)]">{entry.rank}</td>
+            <tbody>
+              {entries.map((entry) => (
+                <Fragment key={entry.playerId}>
+                  {shouldShowTop8CutLine(entry.rank, standingTotal) && <LeaderboardTop8CutRow />}
+                  <tr
+                    className={`border-b border-[var(--color-border)]/70 transition-colors hover:brightness-[1.03] ${leaderboardTableRowClass(entry.rank, standingTotal)}`}
+                  >
+                  <td className="px-4 py-3 font-semibold text-[var(--color-gold)] tabular-nums">
+                    {entry.rank === 1 && <span className="mr-1" aria-hidden>👑</span>}
+                    {entry.rank}
+                  </td>
                   <td className="px-4 py-3">
                     <Link to={`/player/${entry.playerId}`} className="font-medium text-[var(--color-cream)] hover:text-[var(--color-gold)] transition underline underline-offset-2">
                       {entry.playerName}
@@ -308,12 +352,19 @@ function LeagueStandingsView({ leagueId }: { leagueId: number }) {
                   <td className={`px-4 py-3 text-center ${entry.goalDifference >= 0 ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-accent-red)]'}`}>
                     {entry.goalDifference >= 0 ? '+' : ''}{entry.goalDifference}
                   </td>
+                  <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">{entry.apples ?? 0}</td>
                   <td className="px-4 py-3 text-right font-bold text-[var(--color-accent-green)]">{entry.points}</td>
                 </tr>
+                </Fragment>
               ))}
             </tbody>
           </table>
         </div>
+        {standingTotal > 0 && (
+          <div className="px-4 py-3 border-t border-[var(--color-border)]/80 bg-black/20">
+            <LeaderboardLegend totalPlayers={standingTotal} />
+          </div>
+        )}
       </div>
       {entries.length === 0 && (
         <p className="text-center text-[var(--color-muted)]">No standings yet.</p>

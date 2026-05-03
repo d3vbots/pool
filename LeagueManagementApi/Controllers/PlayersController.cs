@@ -91,6 +91,7 @@ public class PlayersController : ControllerBase
                 GamesWon = lp.GamesWon,
                 GamesLost = lp.GamesLost,
                 GoalDifference = lp.GamesWon - lp.GamesLost,
+                Apples = lp.Apples,
                 Points = lp.Points
             })
             .ToListAsync(ct);
@@ -162,6 +163,7 @@ public class PlayersController : ControllerBase
                 GamesWon = lp.GamesWon,
                 GamesLost = lp.GamesLost,
                 GoalDifference = lp.GamesWon - lp.GamesLost,
+                Apples = lp.Apples,
                 Points = lp.Points
             })
             .ToListAsync(ct);

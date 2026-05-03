@@ -34,6 +34,7 @@ public static class SupabaseSchema
                 ""WinPoints"" integer NOT NULL DEFAULT 3,
                 ""DrawPoints"" integer NOT NULL DEFAULT 1,
                 ""LossPoints"" integer NOT NULL DEFAULT 0,
+                ""AppleBonusPoints"" integer NOT NULL DEFAULT 1,
                 ""Status"" integer NOT NULL DEFAULT 0,
                 ""FixturesGenerated"" boolean NOT NULL DEFAULT false,
                 ""IsDeleted"" boolean NOT NULL DEFAULT false,
@@ -42,6 +43,7 @@ public static class SupabaseSchema
         await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_Leagues_Status"" ON ""Leagues"" (""Status"")", ct);
         await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE ""Leagues"" ADD COLUMN IF NOT EXISTS ""IsDeleted"" boolean NOT NULL DEFAULT false", ct);
         await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE ""Leagues"" ADD COLUMN IF NOT EXISTS ""IsHidden"" boolean NOT NULL DEFAULT false", ct);
+        await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE ""Leagues"" ADD COLUMN IF NOT EXISTS ""AppleBonusPoints"" integer NOT NULL DEFAULT 1", ct);
 
         await db.Database.ExecuteSqlRawAsync(@"
             CREATE TABLE IF NOT EXISTS ""LeaguePlayers"" (
@@ -55,11 +57,13 @@ public static class SupabaseSchema
                 ""GamesWon"" integer NOT NULL DEFAULT 0,
                 ""GamesLost"" integer NOT NULL DEFAULT 0,
                 ""Points"" integer NOT NULL DEFAULT 0,
+                ""Apples"" integer NOT NULL DEFAULT 0,
                 PRIMARY KEY (""LeagueId"", ""PlayerId""),
                 CONSTRAINT ""FK_LeaguePlayers_Leagues"" FOREIGN KEY (""LeagueId"") REFERENCES ""Leagues"" (""Id"") ON DELETE CASCADE,
                 CONSTRAINT ""FK_LeaguePlayers_Players"" FOREIGN KEY (""PlayerId"") REFERENCES ""Players"" (""Id"") ON DELETE CASCADE
             )", ct);
         await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_LeaguePlayers_LeagueId"" ON ""LeaguePlayers"" (""LeagueId"")", ct);
+        await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE ""LeaguePlayers"" ADD COLUMN IF NOT EXISTS ""Apples"" integer NOT NULL DEFAULT 0", ct);
 
         await db.Database.ExecuteSqlRawAsync(@"
             CREATE TABLE IF NOT EXISTS ""Matches"" (
@@ -72,10 +76,14 @@ public static class SupabaseSchema
                 ""Status"" integer NOT NULL DEFAULT 0,
                 ""PlayerAScore"" integer,
                 ""PlayerBScore"" integer,
+                ""PlayerAApples"" integer NOT NULL DEFAULT 0,
+                ""PlayerBApples"" integer NOT NULL DEFAULT 0,
                 CONSTRAINT ""FK_Matches_Leagues"" FOREIGN KEY (""LeagueId"") REFERENCES ""Leagues"" (""Id"") ON DELETE CASCADE,
                 CONSTRAINT ""FK_Matches_PlayerA"" FOREIGN KEY (""PlayerAId"") REFERENCES ""Players"" (""Id"") ON DELETE RESTRICT,
                 CONSTRAINT ""FK_Matches_PlayerB"" FOREIGN KEY (""PlayerBId"") REFERENCES ""Players"" (""Id"") ON DELETE RESTRICT
             )", ct);
         await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_Matches_LeagueId_Status"" ON ""Matches"" (""LeagueId"", ""Status"")", ct);
+        await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE ""Matches"" ADD COLUMN IF NOT EXISTS ""PlayerAApples"" integer NOT NULL DEFAULT 0", ct);
+        await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE ""Matches"" ADD COLUMN IF NOT EXISTS ""PlayerBApples"" integer NOT NULL DEFAULT 0", ct);
     }
 }

@@ -83,6 +83,7 @@ public class LeagueService : ILeagueService
             WinPoints = req.WinPoints,
             DrawPoints = req.DrawPoints,
             LossPoints = req.LossPoints,
+            AppleBonusPoints = req.AppleBonusPoints,
             Status = LeagueStatus.Draft
         };
         _db.Leagues.Add(league);
@@ -118,6 +119,7 @@ public class LeagueService : ILeagueService
         league.WinPoints = req.WinPoints;
         league.DrawPoints = req.DrawPoints;
         league.LossPoints = req.LossPoints;
+        league.AppleBonusPoints = req.AppleBonusPoints;
         await _db.SaveChangesAsync(ct);
         return await GetByIdAsync(id, ct: ct);
     }
@@ -327,6 +329,7 @@ public class LeagueService : ILeagueService
             WinPoints = l.WinPoints,
             DrawPoints = l.DrawPoints,
             LossPoints = l.LossPoints,
+            AppleBonusPoints = l.AppleBonusPoints,
             Status = l.Status.ToString(),
             FixturesGenerated = l.FixturesGenerated,
             PlayerCount = l.LeaguePlayers?.Count ?? 0,

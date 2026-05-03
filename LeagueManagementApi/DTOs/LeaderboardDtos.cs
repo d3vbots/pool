@@ -12,5 +12,7 @@ public class LeaderboardEntryResponse
     public int GamesWon { get; set; }
     public int GamesLost { get; set; }
     public int GoalDifference { get; set; }
+    /// <summary>Total green apples (break-and-finish) in the league.</summary>
+    public int Apples { get; set; }
     public int Points { get; set; }
 }

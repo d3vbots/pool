@@ -17,4 +17,6 @@ public class LeaguePlayer
     public int GamesLost { get; set; }
     public int GoalDifference => GamesWon - GamesLost;
     public int Points { get; set; }
+    /// <summary>Total green apples (break-and-finish) this player has recorded in the league.</summary>
+    public int Apples { get; set; }
 }

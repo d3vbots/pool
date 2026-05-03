@@ -74,6 +74,10 @@ public class MatchService : IMatchService
         if (req.PlayerAScore < 0 || req.PlayerBScore < 0 ||
             req.PlayerAScore + req.PlayerBScore > bestOf)
             return (false, $"Scores must be non-negative and total games must not exceed {bestOf}.");
+        if (req.PlayerAApples < 0 || req.PlayerBApples < 0)
+            return (false, "Apple counts cannot be negative.");
+        if (req.PlayerAApples > req.PlayerAScore || req.PlayerBApples > req.PlayerBScore)
+            return (false, "Apples cannot exceed games won by that player.");
 
         // Valid outcomes for BestOf: one player wins (has more games) or draw (equal). e.g. Best of 4: 4-0, 3-1, 2-2
         bool aWins = req.PlayerAScore > req.PlayerBScore;
@@ -98,15 +102,21 @@ public class MatchService : IMatchService
         var (pointsA, pointsB, _) = _resultService.GetMatchOutcome(
             req.PlayerAScore, req.PlayerBScore,
             match.League.WinPoints, match.League.DrawPoints, match.League.LossPoints);
+        int appleBonus = Math.Max(0, match.League.AppleBonusPoints);
+        int bonusA = req.PlayerAApples > 0 ? appleBonus : 0;
+        int bonusB = req.PlayerBApples > 0 ? appleBonus : 0;
 
         match.PlayerAScore = req.PlayerAScore;
         match.PlayerBScore = req.PlayerBScore;
+        match.PlayerAApples = req.PlayerAApples;
+        match.PlayerBApples = req.PlayerBApples;
         match.Status = MatchStatus.Completed;
 
         lpA.Played++;
         lpA.GamesWon += req.PlayerAScore;
         lpA.GamesLost += req.PlayerBScore;
-        lpA.Points += pointsA;
+        lpA.Points += pointsA + bonusA;
+        lpA.Apples += req.PlayerAApples;
         if (aWins) lpA.Wins++;
         else if (bWins) lpA.Losses++;
         else lpA.Draws++;
@@ -114,7 +124,8 @@ public class MatchService : IMatchService
         lpB.Played++;
         lpB.GamesWon += req.PlayerBScore;
         lpB.GamesLost += req.PlayerAScore;
-        lpB.Points += pointsB;
+        lpB.Points += pointsB + bonusB;
+        lpB.Apples += req.PlayerBApples;
         if (bWins) lpB.Wins++;
         else if (aWins) lpB.Losses++;
         else lpB.Draws++;
@@ -154,6 +165,8 @@ public class MatchService : IMatchService
         RevertResult(match, lpA, lpB);
         match.PlayerAScore = null;
         match.PlayerBScore = null;
+        match.PlayerAApples = 0;
+        match.PlayerBApples = 0;
         match.Status = MatchStatus.Pending;
         await _db.SaveChangesAsync(ct);
         return (true, string.Empty);
@@ -202,6 +215,8 @@ public class MatchService : IMatchService
 
         match.PlayerAScore = 0;
         match.PlayerBScore = 0;
+        match.PlayerAApples = 0;
+        match.PlayerBApples = 0;
         match.Status = MatchStatus.Abandoned;
     }
 
@@ -227,11 +242,15 @@ public class MatchService : IMatchService
         int sb = match.PlayerBScore ?? 0;
         var (pointsA, pointsB, _) = _resultService.GetMatchOutcome(sa, sb,
             match.League.WinPoints, match.League.DrawPoints, match.League.LossPoints);
+        int appleBonus = Math.Max(0, match.League.AppleBonusPoints);
+        int bonusA = match.PlayerAApples > 0 ? appleBonus : 0;
+        int bonusB = match.PlayerBApples > 0 ? appleBonus : 0;
 
         lpA.Played--;
         lpA.GamesWon -= sa;
         lpA.GamesLost -= sb;
-        lpA.Points -= pointsA;
+        lpA.Points -= pointsA + bonusA;
+        lpA.Apples -= match.PlayerAApples;
         if (sa > sb) lpA.Wins--;
         else if (sb > sa) lpA.Losses--;
         else lpA.Draws--;
@@ -239,7 +258,8 @@ public class MatchService : IMatchService
         lpB.Played--;
         lpB.GamesWon -= sb;
         lpB.GamesLost -= sa;
-        lpB.Points -= pointsB;
+        lpB.Points -= pointsB + bonusB;
+        lpB.Apples -= match.PlayerBApples;
         if (sb > sa) lpB.Wins--;
         else if (sa > sb) lpB.Losses--;
         else lpB.Draws--;
@@ -259,6 +279,8 @@ public class MatchService : IMatchService
         Status = m.Status.ToString(),
         PlayerAScore = m.PlayerAScore,
         PlayerBScore = m.PlayerBScore,
+        PlayerAApples = m.PlayerAApples,
+        PlayerBApples = m.PlayerBApples,
         AbandonedForfeitGames = m.Status == MatchStatus.Abandoned ? m.League?.MatchFormatBestOf : null
     };
 }

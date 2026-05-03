@@ -15,6 +15,8 @@ public class League
     public int WinPoints { get; set; } = 3;
     public int DrawPoints { get; set; } = 1;
     public int LossPoints { get; set; } = 0;
+    /// <summary>Bonus league points when a player records at least one apple in a match (still only one bonus per match per player).</summary>
+    public int AppleBonusPoints { get; set; } = 1;
     public LeagueStatus Status { get; set; } = LeagueStatus.Draft;
     public bool FixturesGenerated { get; set; }
     /// <summary>When true, league is excluded from all lists and GetById returns 404 (soft delete).</summary>

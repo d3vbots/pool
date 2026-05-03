@@ -24,6 +24,7 @@ public class LeaderboardService : ILeaderboardService
             .OrderByDescending(lp => lp.Points)
             .ThenByDescending(lp => lp.GamesWon - lp.GamesLost)
             .ThenByDescending(lp => lp.GamesWon)
+            .ThenByDescending(lp => lp.Apples)
             .Select(lp => new LeaderboardEntryResponse
             {
                 PlayerId = lp.PlayerId,
@@ -35,6 +36,7 @@ public class LeaderboardService : ILeaderboardService
                 GamesWon = lp.GamesWon,
                 GamesLost = lp.GamesLost,
                 GoalDifference = lp.GamesWon - lp.GamesLost,
+                Apples = lp.Apples,
                 Points = lp.Points
             })
             .ToListAsync(ct);

@@ -19,4 +19,9 @@ public class Match
 
     public int? PlayerAScore { get; set; }
     public int? PlayerBScore { get; set; }
+
+    /// <summary>Green apples (break-and-finish frames) for player A in this match; capped by frames/games they won.</summary>
+    public int PlayerAApples { get; set; }
+    /// <summary>Green apples for player B in this match.</summary>
+    public int PlayerBApples { get; set; }
 }

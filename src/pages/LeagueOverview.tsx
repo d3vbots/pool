@@ -26,6 +26,8 @@ export function LeagueOverview({ league }: { league: LeagueResponse }) {
         <h3 className="text-sm text-[var(--color-muted)]">Points</h3>
         <p className="mt-1 text-sm text-[var(--color-cream-dim)]">
           Win: {league.winPoints} · Draw: {league.drawPoints} · Loss: {league.lossPoints}
+          {' · '}
+          Apple bonus: {league.appleBonusPoints ?? 1}
         </p>
         <p className="mt-1 text-sm text-[var(--color-muted)]">Best of {league.matchFormatBestOf} · {league.isDoubleRoundRobin ? 'Double' : 'Single'} round robin</p>
       </div>

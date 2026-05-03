@@ -25,6 +25,7 @@ export function LeagueFormPage() {
     winPoints: 3,
     drawPoints: 1,
     lossPoints: 0,
+    appleBonusPoints: 1,
   });
   const [status, setStatus] = useState('Draft');
   const [canEditSettings, setCanEditSettings] = useState(true);
@@ -46,6 +47,7 @@ export function LeagueFormPage() {
           winPoints: l.winPoints,
           drawPoints: l.drawPoints,
           lossPoints: l.lossPoints,
+          appleBonusPoints: l.appleBonusPoints ?? 1,
         });
         setStatus(l.status);
         setCanEditSettings(!l.fixturesGenerated);
@@ -230,6 +232,18 @@ export function LeagueFormPage() {
               className="w-full min-h-[48px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none"
               readOnly={!canEditSettings}
             />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Apple bonus (points)</label>
+            <input
+              type="number"
+              min={0}
+              value={form.appleBonusPoints ?? 1}
+              onChange={(e) => update({ appleBonusPoints: parseInt(e.target.value, 10) || 0 })}
+              className="w-full min-h-[48px] rounded-lg border border-[var(--color-border)] bg-black/40 px-3 py-2.5 text-base text-white focus:border-[var(--color-accent-green)] focus:outline-none"
+              readOnly={!canEditSettings}
+            />
+            <p className="mt-1 text-xs text-[var(--color-muted)]">Extra points per player per match if they record at least one green apple (break-and-finish); apple count still tracks every frame.</p>
           </div>
           {isEdit && (
             <div className="sm:col-span-2">

@@ -93,8 +93,21 @@ export const players = {
 
 export const matches = {
   listByLeague: (leagueId: number) => api<MatchResponse[]>(`/matches/leagues/${leagueId}`),
-  setResult: (matchId: number, playerAScore: number, playerBScore: number) =>
-    api<void>(`/matches/${matchId}/result`, { method: 'PUT', body: JSON.stringify({ playerAScore, playerBScore }) }),
+  setResult: (
+    matchId: number,
+    playerAScore: number,
+    playerBScore: number,
+    opts?: { playerAApples?: number; playerBApples?: number }
+  ) =>
+    api<void>(`/matches/${matchId}/result`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        playerAScore,
+        playerBScore,
+        playerAApples: opts?.playerAApples ?? 0,
+        playerBApples: opts?.playerBApples ?? 0,
+      }),
+    }),
   deleteResult: (matchId: number) => api<void>(`/matches/${matchId}/result`, { method: 'DELETE' }),
   /** Both players forfeit (no-show): each gets a loss, loss points, and games lost = league best-of. */
   abandon: (matchId: number) => api<void>(`/matches/${matchId}/abandon`, { method: 'PUT' }),
@@ -124,6 +137,7 @@ export interface LeagueResponse {
   winPoints: number;
   drawPoints: number;
   lossPoints: number;
+  appleBonusPoints: number;
   status: string;
   fixturesGenerated: boolean;
   playerCount: number;
@@ -144,6 +158,7 @@ export interface CreateLeagueRequest {
   winPoints?: number;
   drawPoints?: number;
   lossPoints?: number;
+  appleBonusPoints?: number;
 }
 
 export type UpdateLeagueRequest = CreateLeagueRequest;
@@ -174,6 +189,7 @@ export interface PlayerLeagueEntryResponse {
   gamesWon: number;
   gamesLost: number;
   goalDifference: number;
+  apples: number;
   points: number;
 }
 
@@ -189,6 +205,7 @@ export interface LeaguePlayerResponse {
   gamesWon: number;
   gamesLost: number;
   goalDifference: number;
+  apples: number;
   points: number;
 }
 
@@ -206,6 +223,9 @@ export interface MatchResponse {
   status: string;
   playerAScore?: number;
   playerBScore?: number;
+  /** Green apples (break-and-finish) recorded for each player this match. */
+  playerAApples?: number;
+  playerBApples?: number;
   /** When status is Abandoned: games lost per player (league match format). */
   abandonedForfeitGames?: number | null;
 }
@@ -221,6 +241,7 @@ export interface LeaderboardEntryResponse {
   gamesWon: number;
   gamesLost: number;
   goalDifference: number;
+  apples: number;
   points: number;
 }
 

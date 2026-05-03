@@ -98,6 +98,7 @@ export function LeaguePlayersPage() {
               <th className="px-4 py-3">Payment</th>
               <th className="px-4 py-3">P</th>
               <th className="px-4 py-3">W-D-L</th>
+              <th className="px-4 py-3 text-center" title="Green apples">🍏</th>
               <th className="px-4 py-3">Pts</th>
               {!league.fixturesGenerated && <th className="px-4 py-3"></th>}
             </tr>
@@ -126,6 +127,7 @@ export function LeaguePlayersPage() {
                 </td>
                 <td className="px-4 py-3 text-[var(--color-cream-dim)]">{lp.played}</td>
                 <td className="px-4 py-3 text-[var(--color-cream-dim)]">{lp.wins}-{lp.draws}-{lp.losses}</td>
+                <td className="px-4 py-3 text-center text-[var(--color-cream-dim)]">{lp.apples ?? 0}</td>
                 <td className="px-4 py-3 font-medium text-[var(--color-accent-green)]">{lp.points}</td>
                 {!league.fixturesGenerated && (
                   <td className="px-3 sm:px-4 py-3">
